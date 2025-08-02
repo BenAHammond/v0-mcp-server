@@ -1,0 +1,52 @@
+{
+  "name": "v0-mcp-server",
+  "version": "1.0.0",
+  "main": "./dist/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "tsx watch src/cli/index.ts",
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "mcp:test": "npx @modelcontextprotocol/inspector dist/index.js",
+    "test:cli": "node dist/cli/index.js --validate",
+    "prepublishOnly": "npm run typecheck && npm run build",
+    "release": "npm run prepublishOnly && npm publish",
+    "clean": "rimraf dist"
+  },
+  "keywords": [
+    "mcp",
+    "v0",
+    "claude-code",
+    "ai",
+    "react",
+    "components"
+  ],
+  "author": "",
+  "license": "MIT",
+  "description": "MCP Server for v0.dev component generation with Claude Code",
+  "type": "module",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "v0-mcp": "./dist/cli/index.js"
+  },
+  "files": [
+    "dist/**/*"
+  ],
+  "preferGlobal": "true",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.17.1",
+    "chalk": "^5.4.1",
+    "commander": "^14.0.0",
+    "v0-sdk": "^0.6.2"
+  },
+  "devDependencies": {
+    "@types/node": "^24.1.0",
+    "rimraf": "^6.0.1",
+    "tsup": "^8.5.0",
+    "tsx": "^4.20.3",
+    "typescript": "^5.9.2"
+  }
+}
