@@ -3,15 +3,29 @@
   "version": "1.0.0",
   "main": "./dist/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:unit": "jest tests/unit",
+    "test:integration": "jest tests/integration",
+    "test:playwright": "playwright test",
+    "test:playwright:debug": "playwright test --debug",
     "dev": "tsx watch src/cli/index.ts",
     "build": "tsup",
     "typecheck": "tsc --noEmit",
     "mcp:test": "npx @modelcontextprotocol/inspector dist/index.js",
     "test:cli": "node dist/cli/index.js --validate",
-    "prepublishOnly": "npm run typecheck && npm run build",
+    "prepublishOnly": "npm run build",
     "release": "npm run prepublishOnly && npm publish",
-    "clean": "rimraf dist"
+    "publish:dry": "npm run prepublishOnly && npm publish --dry-run",
+    "version:patch": "npm version patch",
+    "version:minor": "npm version minor",
+    "version:major": "npm version major",
+    "clean": "rimraf dist",
+    "docs:dev": "cd docs-site && npm run dev",
+    "docs:build": "cd docs-site && npm run build",
+    "docs:install": "cd docs-site && npm install",
+    "docs:test": "playwright test tests/playwright/docs-site.spec.ts --reporter=list"
   },
   "keywords": [
     "mcp",
@@ -19,32 +33,55 @@
     "claude-code",
     "ai",
     "react",
-    "components"
+    "components",
+    "auto-discovery",
+    "simplified",
+    "sdk-introspection"
   ],
-  "author": "",
+  "author": "Claude Code Assistant",
   "license": "MIT",
-  "description": "MCP Server for v0.dev component generation with Claude Code",
+  "description": "Simplified MCP Server for v0.dev with auto-discovery and direct SDK dispatch",
   "type": "module",
   "types": "./dist/index.d.ts",
   "bin": {
+    "v0-mcp-server": "./dist/cli/index.js",
     "v0-mcp": "./dist/cli/index.js"
   },
   "files": [
-    "dist/**/*"
+    "dist/**/*",
+    "README.md",
+    "LICENSE"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/anthropics/v0-mcp-server.git"
+  },
+  "homepage": "https://github.com/anthropics/v0-mcp-server#readme",
+  "bugs": {
+    "url": "https://github.com/anthropics/v0-mcp-server/issues"
+  },
   "preferGlobal": "true",
   "engines": {
     "node": ">=18.0.0"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.17.1",
+    "@types/uuid": "^10.0.0",
     "chalk": "^5.4.1",
     "commander": "^14.0.0",
+    "dotenv": "^17.2.1",
+    "uuid": "^11.1.0",
     "v0-sdk": "^0.6.2"
   },
   "devDependencies": {
+    "@playwright/test": "^1.54.2",
+    "@types/jest": "^30.0.0",
     "@types/node": "^24.1.0",
+    "jest": "^30.0.5",
+    "playwright": "^1.54.2",
     "rimraf": "^6.0.1",
+    "tree-kill": "^1.2.2",
+    "ts-jest": "^29.4.0",
     "tsup": "^8.5.0",
     "tsx": "^4.20.3",
     "typescript": "^5.9.2"

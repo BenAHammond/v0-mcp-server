@@ -1,0 +1,40 @@
+# Source files (keep dist/ for publishing)
+src/
+tests/
+
+# Documentation site
+docs-site/
+vercel.json
+
+# Config files
+.env
+.env.*
+tsconfig.json
+tsup.config.ts
+jest.config.js
+playwright.config.ts
+pnpm-workspace.yaml
+
+# Development files
+*.log
+pnpm-lock.yaml
+
+# Project management
+.claude/
+
+# Git
+.git/
+.gitignore
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# CI/CD
+.github/

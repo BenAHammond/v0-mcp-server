@@ -5,10 +5,13 @@ npm-debug.log*
 # Build output
 dist/
 *.tsbuildinfo
+docs-site/out/
+docs-site/.next/
 
 # Environment
 .env
 .env.local
+.env.*
 
 # IDE
 .vscode/
@@ -23,3 +26,20 @@ Thumbs.db
 # Logs
 logs/
 *.log
+
+# Project management
+.claude/
+
+# Planning and analysis documents
+task-dependency-analysis.md
+comprehensive-error-verification.md
+TOOL_STATUS.md
+docs/TASK-*.md
+docs/performance-analysis-*.md
+docs/language-detection.md
+**/research-findings*.md
+
+# Test artifacts
+test-results/
+test-*.js
+mcp-debug.log
