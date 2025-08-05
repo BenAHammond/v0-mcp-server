@@ -23,6 +23,8 @@ import {
 } from './utils/aliases.js';
 import { validateToolParameters } from './utils/param-validator.js';
 import { formatSdkResponse, formatErrorResponse, formatExecutionResult } from './utils/response-formatter.js';
+import { logInfo, logError, logDebug, logWarn } from './utils/logs.js';
+import { createLogsTools } from './tools/logs-tool.js';
 
 import { ConfigManager, DEFAULT_CONFIG } from './config.js';
 import { ApiKeyManager } from './auth.js';
@@ -62,8 +64,8 @@ export class SimplifiedMcpServer {
     }
 
     try {
-      console.error('[MCP] Starting simplified v0 MCP server...');
-      console.error('[MCP] Config:', { 
+      logInfo('Starting simplified v0 MCP server...');
+      logDebug('Config:', { 
         hasApiKey: !!this.config.apiKey,
         apiKeyLength: this.config.apiKey?.length,
         verbose: this.config.verbose,
@@ -72,22 +74,22 @@ export class SimplifiedMcpServer {
       });
       
       await this.createV0Client();
-      console.error('[MCP] v0 SDK client created');
+      logInfo('v0 SDK client created');
 
       await this.discoverAndRegisterTools();
-      console.error(`[MCP] Discovered and registered ${this.toolMapping.discoveredTools.size} tools`);
+      logInfo(`Discovered and registered ${this.toolMapping.discoveredTools.size} tools`);
 
       this.registerRequestHandlers();
-      console.error('[MCP] Request handlers registered');
+      logInfo('Request handlers registered');
 
       const transport = new StdioServerTransport();
       await this.server.connect(transport);
-      console.error('[MCP] Server started with stdio transport');
+      logInfo('Server started with stdio transport');
 
       this.isStarted = true;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      console.error('[MCP] Failed to start server:', errorMessage);
+      logError('Failed to start server:', errorMessage);
       throw error;
     }
   }
@@ -107,21 +109,21 @@ export class SimplifiedMcpServer {
 
   private async createV0Client(): Promise<void> {
     try {
-      console.error('[MCP] Validating API key...');
+      logInfo('Validating API key...');
       new ApiKeyManager(this.config.apiKey);
-      console.error('[MCP] API key validated');
+      logInfo('API key validated');
 
-      console.error('[MCP] Creating v0 client...');
+      logInfo('Creating v0 client...');
       this.v0Client = createV0Client({ 
         apiKey: this.config.apiKey
       });
-      console.error('[MCP] v0 client created successfully');
+      logInfo('v0 client created successfully');
 
       if (this.config.verbose) {
-        console.error('[MCP] v0 client initialized with API key');
+        logDebug('v0 client initialized with API key');
       }
     } catch (error) {
-      console.error('[MCP] Error creating v0 client:', error);
+      logError('Error creating v0 client:', error);
       throw new Error(`Failed to create v0 client: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
@@ -142,18 +144,29 @@ export class SimplifiedMcpServer {
         try {
           this.registerDiscoveredTool(method);
         } catch (error) {
-          console.error(`[MCP] Failed to register tool ${method.toolName}:`, error);
+          logError(`Failed to register tool ${method.toolName}:`, error);
+        }
+      }
+
+      // Add logs tools
+      const logsTools = createLogsTools();
+      for (const tool of logsTools) {
+        try {
+          this.registerDiscoveredTool(tool);
+          logDebug(`Registered logs tool: ${tool.toolName}`);
+        } catch (error) {
+          logError(`Failed to register logs tool ${tool.toolName}:`, error);
         }
       }
 
       if (this.config.verbose) {
         const toolNames = Array.from(this.toolMapping.discoveredTools.keys());
         const legacyNames = getLegacyToolNames();
-        console.error(`[MCP] Registered tools: ${toolNames.join(', ')}`);
-        console.error(`[MCP] Legacy aliases: ${legacyNames.join(', ')}`);
+        logDebug(`Registered tools: ${toolNames.join(', ')}`);
+        logDebug(`Legacy aliases: ${legacyNames.join(', ')}`);
       }
     } catch (error) {
-      console.error('[MCP] SDK discovery failed, falling back to minimal toolset:', error);
+      logError('SDK discovery failed, falling back to minimal toolset:', error);
       this.registerMinimalToolset();
     }
   }
@@ -173,22 +186,26 @@ export class SimplifiedMcpServer {
    * Registers minimal toolset as fallback when SDK discovery fails
    */
   private registerMinimalToolset(): void {
-    console.error('[MCP] Registering minimal fallback toolset...');
+    logWarn('Registering minimal fallback toolset...');
     
     // Create manual tool definitions for core functionality
     const coreTools = this.createCoreToolDefinitions();
     
-    for (const tool of coreTools) {
+    // Add logs tools to the core tools
+    const logsTools = createLogsTools();
+    const allTools = [...coreTools, ...logsTools];
+    
+    for (const tool of allTools) {
       try {
         this.toolMapping.discoveredTools.set(tool.toolName, tool);
         this.toolMapping.schemas.set(tool.toolName, generateMcpToolSchema(tool));
-        console.error(`[MCP] Registered fallback tool: ${tool.toolName}`);
+        logInfo(`Registered fallback tool: ${tool.toolName}`);
       } catch (error) {
-        console.error(`[MCP] Failed to register fallback tool ${tool.toolName}:`, error);
+        logError(`Failed to register fallback tool ${tool.toolName}:`, error);
       }
     }
     
-    console.error(`[MCP] Fallback toolset registered with ${coreTools.length} tools`);
+    logInfo(`Fallback toolset registered with ${allTools.length} tools`);
   }
 
   /**
@@ -313,15 +330,20 @@ export class SimplifiedMcpServer {
     // Handle tool calls
     this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
       const { name: toolName, arguments: args } = request.params;
+      logInfo(`Tool call received: ${toolName}`, args);
       
       try {
         const result = await this.handleToolCall(toolName, args || {});
         
+        console.error(`[DEBUG] Tool ${toolName} result:`, JSON.stringify(result, null, 2));
+        logDebug(`Tool ${toolName} result`, result);
+        
+        // Just return the raw result
         return {
           content: [
             {
               type: 'text',
-              text: this.formatToolResponse(result)
+              text: JSON.stringify(result, null, 2)
             }
           ]
         };

@@ -5,11 +5,12 @@ import { fileURLToPath } from 'node:url';
 
 import { SimplifiedMcpServer } from './server.js';
 import { SimplifiedConfig } from './types.js';
+import { logInfo, logError, logDebug, logWarn } from './utils/logs.js';
 
 // Immediately log startup
-console.error('[MCP] index.ts loaded at', new Date().toISOString());
-console.error('[MCP] Process argv:', process.argv);
-console.error('[MCP] Process env V0_API_KEY exists:', !!process.env.V0_API_KEY);
+logInfo('index.ts loaded at ' + new Date().toISOString());
+logDebug('Process argv:', process.argv);
+logDebug('Process env V0_API_KEY exists:', !!process.env.V0_API_KEY);
 
 export async function startServer(apiKey?: string, verbose: boolean = false): Promise<SimplifiedMcpServer> {
   try {
@@ -36,7 +37,7 @@ export async function startServer(apiKey?: string, verbose: boolean = false): Pr
     return server;
 
   } catch (error) {
-    console.error('🐛 Raw server initialization error:', error);
+    logError('Raw server initialization error:', error);
     throw new Error(`Failed to initialize MCP server: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
@@ -71,14 +72,14 @@ let serverInstance: SimplifiedMcpServer | null = null;
 
 process.on('SIGINT', async () => {
   if (serverInstance && serverInstance.isRunning()) {
-    console.error('[MCP] Graceful shutdown...');
+    logInfo('Graceful shutdown...');
   }
   process.exit(0);
 });
 
 process.on('SIGTERM', async () => {
   if (serverInstance && serverInstance.isRunning()) {
-    console.error('[MCP] Graceful shutdown...');
+    logInfo('Graceful shutdown...');
   }
   process.exit(0);
 });
@@ -95,8 +96,8 @@ export { ApiKeyManager } from './auth.js';
 
 // Auto-startup when run directly
 try {
-  console.error('[MCP] Auto-startup section reached');
-  console.error('[MCP] Simplified v0 MCP Server starting...');
+  logDebug('Auto-startup section reached');
+  logInfo('Simplified v0 MCP Server starting...');
 
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = path.dirname(__filename);
@@ -106,24 +107,24 @@ try {
   let envLoaded = false;
 
   if (fs.existsSync(envPath)) {
-    console.error(`[MCP] Loading environment from: ${envPath}`);
+    logInfo(`Loading environment from: ${envPath}`);
     loadEnv({ path: envPath });
     envLoaded = true;
   } else {
     envPath = path.join(scriptDir, '.env');
     if (fs.existsSync(envPath)) {
-      console.error(`[MCP] Loading environment from: ${envPath}`);
+      logInfo(`Loading environment from: ${envPath}`);
       loadEnv({ path: envPath });
       envLoaded = true;
     }
   }
 
   if (!envLoaded) {
-    console.error('[MCP] No .env file found in current directory or project root');
+    logWarn('No .env file found in current directory or project root');
   }
 
   if (!process.env.V0_API_KEY) {
-    console.error('[MCP] ERROR: V0_API_KEY environment variable is required');
+    logError('V0_API_KEY environment variable is required');
     console.error('[MCP] Please set it in one of these ways:');
     console.error('[MCP] 1. Create a .env file with: V0_API_KEY=your_key_here');
     console.error('[MCP] 2. Set environment variable: export V0_API_KEY=your_key_here');
@@ -138,27 +139,27 @@ try {
   ];
   const isValidFormat = apiKeyFormats.some(format => format.test(process.env.V0_API_KEY!));
   if (!isValidFormat) {
-    console.error('[MCP] ERROR: Invalid V0_API_KEY format');
+    logError('Invalid V0_API_KEY format');
     console.error('[MCP] Expected format: v1:xxxxx:xxxxx or v0_xxxxxxxxx');
     console.error('[MCP] Get your API key from: https://v0.dev/chat/settings/keys');
     process.exit(1);
   }
 
-  console.error('[MCP] API key loaded successfully');
+  logInfo('API key loaded successfully');
 
   startServer()
     .then((server) => {
-      console.error('[MCP] ✅ Simplified server initialized successfully');
-      console.error('[MCP] ✅ Auto-discovery completed');
+      logInfo('✅ Simplified server initialized successfully');
+      logInfo('✅ Auto-discovery completed');
       
       const discoveredTools = server.getDiscoveredTools();
       const toolsList = discoveredTools.length > 0 ? discoveredTools.map(t => t.toolName).join(', ') : 'none discovered, using fallback';
-      console.error(`[MCP] ✅ Registered ${discoveredTools.length} tools: ${toolsList}`);
-      console.error('[MCP] ✅ Ready for MCP protocol messages on stdio');
+      logInfo(`✅ Registered ${discoveredTools.length} tools: ${toolsList}`);
+      logInfo('✅ Ready for MCP protocol messages on stdio');
     })
     .catch(error => {
-      console.error('[MCP] ❌ Fatal error during startup:', error);
-      console.error('[MCP] Stack trace:', error.stack);
+      logError('❌ Fatal error during startup:', error);
+      logError('Stack trace:', error.stack);
       console.error('[MCP] Common issues:');
       console.error('[MCP] - Invalid API key (check if it works on v0.dev)');
       console.error('[MCP] - Network connectivity issues');
@@ -167,7 +168,7 @@ try {
       process.exit(1);
     });
 } catch (error) {
-  console.error('[MCP] ❌ Fatal error in auto-startup:', error);
-  console.error('[MCP] Stack trace:', error instanceof Error ? error.stack : 'No stack trace');
+  logError('❌ Fatal error in auto-startup:', error);
+  logError('Stack trace:', error instanceof Error ? error.stack : 'No stack trace');
   process.exit(1);
 }

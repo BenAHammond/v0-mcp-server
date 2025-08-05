@@ -365,19 +365,38 @@ export function getLegacyToolNames(): string[] {
  * Extracts files from v0 API response
  */
 function extractFilesFromResponse(response: any): Array<{name: string, content: string}> {
+  console.error('[DEBUG-ALIAS] Extracting files from response:', JSON.stringify(response, null, 2));
+  
   // Check various possible locations for files in the response
   if (response.latestVersion && response.latestVersion.files) {
+    console.error('[DEBUG-ALIAS] Found files in latestVersion.files');
     return response.latestVersion.files;
   }
   
   if (response.files) {
+    console.error('[DEBUG-ALIAS] Found files in files');
     return response.files;
   }
   
   if (response.version && response.version.files) {
+    console.error('[DEBUG-ALIAS] Found files in version.files');
     return response.version.files;
   }
   
+  // Check for data wrapper
+  if (response.data) {
+    console.error('[DEBUG-ALIAS] Found data wrapper, checking inside');
+    if (response.data.latestVersion && response.data.latestVersion.files) {
+      console.error('[DEBUG-ALIAS] Found files in data.latestVersion.files');
+      return response.data.latestVersion.files;
+    }
+    if (response.data.files) {
+      console.error('[DEBUG-ALIAS] Found files in data.files');
+      return response.data.files;
+    }
+  }
+  
+  console.error('[DEBUG-ALIAS] No files found in response');
   return [];
 }
 

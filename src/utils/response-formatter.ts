@@ -277,19 +277,38 @@ export function formatErrorResponse(error: any, toolName: string, context?: stri
  * Extracts files from various chat response formats
  */
 function extractFilesFromChatResponse(response: any): any[] {
+  console.error('[DEBUG] Extracting files from response:', JSON.stringify(response, null, 2));
+  
   // Try different possible locations for files
   if (response.latestVersion && response.latestVersion.files) {
+    console.error('[DEBUG] Found files in latestVersion.files');
     return response.latestVersion.files;
   }
   
   if (response.files) {
+    console.error('[DEBUG] Found files in files');
     return response.files;
   }
   
   if (response.version && response.version.files) {
+    console.error('[DEBUG] Found files in version.files');
     return response.version.files;
   }
   
+  // Check for data wrapper
+  if (response.data) {
+    console.error('[DEBUG] Found data wrapper, checking inside');
+    if (response.data.latestVersion && response.data.latestVersion.files) {
+      console.error('[DEBUG] Found files in data.latestVersion.files');
+      return response.data.latestVersion.files;
+    }
+    if (response.data.files) {
+      console.error('[DEBUG] Found files in data.files');
+      return response.data.files;
+    }
+  }
+  
+  console.error('[DEBUG] No files found in response');
   return [];
 }
 
@@ -366,6 +385,17 @@ function maskEmail(email: string): string {
  * Formats execution result for MCP response text
  */
 export function formatExecutionResult(result: ToolExecutionResult): string {
+  // Check for legacy tool response format
+  if (result.success && result.result) {
+    if (result.result.formattedContent) {
+      return result.result.formattedContent;
+    }
+    
+    if (result.result.message) {
+      return result.result.message;
+    }
+  }
+  
   if (result.success && result.formattedResult) {
     if (typeof result.formattedResult === 'string') {
       return result.formattedResult;

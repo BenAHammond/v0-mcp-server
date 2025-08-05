@@ -1,6 +1,5 @@
 
-import { ExampleGallery } from "@/components/client/widgets/example-gallery"
-import { examples } from "@/data/examples"
+import { ExamplesGallery } from "@/components/sections/examples-gallery"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
@@ -17,7 +16,7 @@ export default function ExamplesPage() {
             Examples
           </h1>
           <p className="text-lg sm:text-xl text-gray-600 max-w-3xl">
-            Explore practical examples of v0-generated components. Each example shows the natural language prompt and the resulting code.
+            See what v0 can generate from simple prompts. Each example includes the prompt used and the live component it produced.
           </p>
         </div>
       </section>
@@ -25,7 +24,7 @@ export default function ExamplesPage() {
       {/* Example Gallery Section */}
       <section className="py-8 sm:py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <ExampleGallery examples={examples} />
+          <ExamplesGallery />
         </div>
       </section>
 
