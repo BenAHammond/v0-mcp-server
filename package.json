@@ -38,7 +38,7 @@
     "simplified",
     "sdk-introspection"
   ],
-  "author": "Claude Code Assistant",
+  "author": "Ben Hammond",
   "license": "MIT",
   "description": "Simplified MCP Server for v0.dev with auto-discovery and direct SDK dispatch",
   "type": "module",
@@ -54,11 +54,11 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/anthropics/v0-mcp-server.git"
+    "url": "https://github.com/BenAHammond/v0-mcp-server.git"
   },
-  "homepage": "https://github.com/anthropics/v0-mcp-server#readme",
+  "homepage": "https://github.com/BenAHammond/v0-mcp-server#readme",
   "bugs": {
-    "url": "https://github.com/anthropics/v0-mcp-server/issues"
+    "url": "https://github.com/BenAHammond/v0-mcp-server/issues"
   },
   "preferGlobal": "true",
   "engines": {
