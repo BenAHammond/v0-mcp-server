@@ -7,14 +7,21 @@ Generate React components with AI directly in Claude Desktop using the Model Con
 ## Quick Start
 
 ```bash
-# Install directly into Claude Code
-claude mcp add v0-server -- npx v0-mcp-server --api-key YOUR_V0_API_KEY
+npx v0-mcp-server --api-key YOUR_V0_API_KEY
+```
 
-# Or install globally
-npm install -g v0-mcp-server
+
+# Or Install directly into Claude Code
+```bash
+claude mcp add v0-server -- npx v0-mcp-server --api-key YOUR_V0_API_KEY
 ```
 
 ### Or Configure Claude Desktop
+
+```bash
+# Install globally
+npm install -g v0-mcp-server
+```
 
 Add the following to your Claude Desktop configuration file:
 
@@ -37,7 +44,7 @@ Add the following to your Claude Desktop configuration file:
 
 ## Usage
 
-Simply ask Claude to create or modify components:
+Simply ask your LLM to create or modify components:
 
 > "Create a modern login form with email validation"
 
