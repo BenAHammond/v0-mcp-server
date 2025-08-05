@@ -67,7 +67,7 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.17.1",
     "@types/uuid": "^10.0.0",
-    "chalk": "^5.4.1",
+    "chalk": "^5.5.0",
     "commander": "^14.0.0",
     "dotenv": "^17.2.1",
     "uuid": "^11.1.0",
@@ -76,12 +76,12 @@
   "devDependencies": {
     "@playwright/test": "^1.54.2",
     "@types/jest": "^30.0.0",
-    "@types/node": "^24.1.0",
+    "@types/node": "^24.2.0",
     "jest": "^30.0.5",
     "playwright": "^1.54.2",
     "rimraf": "^6.0.1",
     "tree-kill": "^1.2.2",
-    "ts-jest": "^29.4.0",
+    "ts-jest": "^29.4.1",
     "tsup": "^8.5.0",
     "tsx": "^4.20.3",
     "typescript": "^5.9.2"

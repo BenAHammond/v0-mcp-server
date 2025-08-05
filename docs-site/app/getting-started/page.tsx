@@ -1,5 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { CodeViewer, CodeBlock, InlineCode, CommandBlock } from "@/components/client/widgets/code-viewer"
 import Link from "next/link"
 import { ArrowRight, Key, Download, Settings, Terminal } from "lucide-react"
 
@@ -76,13 +77,11 @@ export default function GettingStartedPage() {
                 <p className="text-sm sm:text-base text-gray-600 mb-4">
                   Visit v0.dev settings to generate your API key
                 </p>
-                <div className="bg-gray-900 rounded-lg p-3 sm:p-4 mb-4 overflow-x-auto">
-                  <code className="text-xs sm:text-sm text-gray-300 whitespace-nowrap">
-                    https://v0.dev/chat/settings/keys
-                  </code>
-                </div>
+                <CodeBlock className="mb-4">
+                  https://v0.dev/chat/settings/keys
+                </CodeBlock>
                 <p className="text-sm text-gray-500">
-                  Replace <code className="bg-gray-100 px-2 py-1 rounded">YOUR_V0_API_KEY</code> with your actual API key
+                  Replace <InlineCode>YOUR_V0_API_KEY</InlineCode> with your actual API key
                 </p>
               </div>
             </div>
@@ -106,30 +105,27 @@ export default function GettingStartedPage() {
                 {/* Claude Code Method - Primary */}
                 <div className="border-2 border-purple-200 bg-purple-50 rounded-lg p-3 sm:p-4 mb-4">
                   <p className="text-xs sm:text-sm font-semibold text-purple-900 mb-2">Recommended: Install with Claude Code</p>
-                  <div className="bg-gray-900 rounded-lg p-3 sm:p-4 overflow-x-auto">
-                    <code className="text-xs sm:text-sm text-gray-300 whitespace-nowrap block">
-                      claude mcp add v0-server -- V0_API_KEY="your-key-here" npx v0-mcp-server
-                    </code>
-                  </div>
+                  <CodeBlock language="bash">
+                    claude mcp add v0-server -e V0_API_KEY="your-key-here" -- npx v0-mcp-server
+                  </CodeBlock>
                 </div>
 
                 {/* NPX Method */}
                 <p className="text-xs sm:text-sm font-semibold text-gray-700 mb-2">Or run directly with npx:</p>
-                <div className="bg-gray-900 rounded-lg p-3 sm:p-4 mb-4 overflow-x-auto">
-                  <code className="text-xs sm:text-sm text-gray-300 whitespace-nowrap block">
-                    V0_API_KEY="your-key-here" npx v0-mcp-server
-                  </code>
-                </div>
+                <CodeBlock language="bash" className="mb-4">
+                  V0_API_KEY="your-key-here" npx v0-mcp-server
+                </CodeBlock>
                 
                 <p className="text-xs sm:text-sm text-gray-500">
                   Or set the API key as an environment variable:
                 </p>
-                <div className="bg-gray-900 rounded-lg p-3 sm:p-4 mt-2 overflow-x-auto">
-                  <code className="text-xs sm:text-sm text-gray-300 whitespace-pre">
-                    export V0_API_KEY="YOUR_V0_API_KEY"
-                    npx v0-mcp-server
-                  </code>
-                </div>
+                <CommandBlock 
+                  className="mt-2"
+                  commands={[
+                    'export V0_API_KEY="YOUR_V0_API_KEY"',
+                    'npx v0-mcp-server'
+                  ]}
+                />
               </div>
             </div>
 
@@ -148,8 +144,10 @@ export default function GettingStartedPage() {
                 <p className="text-sm sm:text-base text-gray-600 mb-4">
                   Add the server to your Claude Desktop configuration file:
                 </p>
-                <div className="bg-gray-900 rounded-lg p-3 sm:p-4 overflow-x-auto">
-                  <code className="text-xs sm:text-sm text-gray-300 whitespace-pre block">{`{
+                <CodeViewer 
+                  language="json"
+                  showLineNumbers={false}
+                  code={`{
   "mcpServers": {
     "v0": {
       "command": "npx",
@@ -159,14 +157,14 @@ export default function GettingStartedPage() {
       }
     }
   }
-}`}</code>
-                </div>
+}`}
+                />
                 <p className="text-xs sm:text-sm text-gray-500 mt-4">
                   Configuration file location:
                 </p>
                 <ul className="text-xs sm:text-sm text-gray-600 mt-2 space-y-2">
-                  <li className="break-words">• macOS: <code className="bg-gray-100 px-1 sm:px-2 py-1 rounded text-xs">~/Library/Application Support/Claude/claude_desktop_config.json</code></li>
-                  <li className="break-words">• Windows: <code className="bg-gray-100 px-1 sm:px-2 py-1 rounded text-xs">%APPDATA%\\Claude\\claude_desktop_config.json</code></li>
+                  <li className="break-words">• macOS: <InlineCode>~/Library/Application Support/Claude/claude_desktop_config.json</InlineCode></li>
+                  <li className="break-words">• Windows: <InlineCode>%APPDATA%\Claude\claude_desktop_config.json</InlineCode></li>
                 </ul>
               </div>
             </div>
@@ -211,9 +209,9 @@ export default function GettingStartedPage() {
                 <CardDescription>Install globally for use across projects</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="bg-gray-900 rounded-lg p-3 sm:p-4 mb-4 overflow-x-auto">
-                  <code className="text-xs sm:text-sm text-gray-300 block whitespace-nowrap">npm install -g v0-mcp-server</code>
-                </div>
+                <CodeBlock language="bash" className="mb-4">
+                  npm install -g v0-mcp-server
+                </CodeBlock>
                 <p className="text-xs sm:text-sm text-gray-500">
                   Then use the same configuration JSON shown above
                 </p>
@@ -225,13 +223,15 @@ export default function GettingStartedPage() {
                 <CardDescription>Clone and run the server locally for development</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="bg-gray-900 rounded-lg p-3 sm:p-4 space-y-2 overflow-x-auto">
-                  <code className="text-xs sm:text-sm text-gray-300 block whitespace-nowrap">git clone https://github.com/BenAHammond/v0-mcp-server.git</code>
-                  <code className="text-xs sm:text-sm text-gray-300 block whitespace-nowrap">cd v0-mcp-server</code>
-                  <code className="text-xs sm:text-sm text-gray-300 block whitespace-nowrap">npm install</code>
-                  <code className="text-xs sm:text-sm text-gray-300 block whitespace-nowrap">npm run build</code>
-                  <code className="text-xs sm:text-sm text-gray-300 block whitespace-nowrap">V0_API_KEY=your-api-key-here node dist/index.js</code>
-                </div>
+                <CommandBlock
+                  commands={[
+                    'git clone https://github.com/BenAHammond/v0-mcp-server.git',
+                    'cd v0-mcp-server',
+                    'npm install',
+                    'npm run build',
+                    'V0_API_KEY=your-api-key-here node dist/index.js'
+                  ]}
+                />
               </CardContent>
             </Card>
           </div>

@@ -1,14 +1,12 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
 import { useState } from "react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { MobileMenu } from "@/components/mobile-menu"
+import { MobileMenu } from "@/components/client/navigation/mobile-menu"
 
 export function Nav() {
-  const pathname = usePathname()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   const links = [
@@ -35,12 +33,7 @@ export function Nav() {
                   <Link
                     key={link.href}
                     href={link.href}
-                    className={cn(
-                      "inline-flex items-center px-1 pt-1 text-sm font-medium border-b-2",
-                      pathname === link.href
-                        ? "border-purple-600 text-gray-900"
-                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                    )}
+                    className="inline-flex items-center px-1 pt-1 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                     {...(link.external && { target: "_blank", rel: "noopener noreferrer" })}
                   >
                     {link.label}

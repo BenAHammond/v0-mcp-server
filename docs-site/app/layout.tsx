@@ -1,7 +1,7 @@
 import type React from "react"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
-import { Nav } from "@/components/nav"
+import { Nav } from "@/components/client/navigation/nav"
 import "./globals.css"
 
 const inter = Inter({ subsets: ["latin"] })
