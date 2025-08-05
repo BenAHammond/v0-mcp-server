@@ -6,6 +6,16 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 
+interface Tool {
+  name: string
+  description: string
+  parameters: {
+    required: string[]
+    optional: string[]
+  }
+  example: string
+}
+
 export default function ApiReferencePage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [copiedTool, setCopiedTool] = useState<string | null>(null)
@@ -16,7 +26,7 @@ export default function ApiReferencePage() {
     setTimeout(() => setCopiedTool(null), 2000)
   }
 
-  const tools = {
+  const tools: Record<string, Tool[]> = {
     chats: [
       {
         name: "chats_create",
@@ -179,7 +189,7 @@ export default function ApiReferencePage() {
     }
   ]
 
-  const filteredTools = Object.entries(tools).reduce((acc, [namespace, toolList]) => {
+  const filteredTools = Object.entries(tools).reduce<Record<string, Tool[]>>((acc, [namespace, toolList]) => {
     const filtered = toolList.filter(tool => 
       tool.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       tool.description.toLowerCase().includes(searchQuery.toLowerCase())
@@ -188,7 +198,7 @@ export default function ApiReferencePage() {
       acc[namespace] = filtered
     }
     return acc
-  }, {} as typeof tools)
+  }, {})
 
   return (
     <div className="min-h-screen bg-white">
