@@ -7,13 +7,13 @@ Generate React components with AI directly in Claude Desktop using the Model Con
 ## Quick Start
 
 ```bash
-npx v0-mcp-server --api-key YOUR_V0_API_KEY
+V0_API_KEY="your-key-here" npx v0-mcp-server
 ```
 
 
 # Or Install directly into Claude Code
 ```bash
-claude mcp add v0-server -- npx v0-mcp-server --api-key YOUR_V0_API_KEY
+claude mcp add v0-server -e V0_API_KEY="your-key-here" -- npx v0-mcp-server
 ```
 
 ### Or Configure Claude Desktop

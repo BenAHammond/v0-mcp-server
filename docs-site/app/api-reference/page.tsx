@@ -1,10 +1,11 @@
 "use client"
 
 import { useState } from "react"
-import { Search, Copy, Check, ChevronRight } from "lucide-react"
+import { Search, Copy, Check, ChevronRight, ExternalLink, BookOpen } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import Link from "next/link"
 
 interface Tool {
   name: string
@@ -14,6 +15,7 @@ interface Tool {
     optional: string[]
   }
   example: string
+  exampleUsageLink?: string
 }
 
 export default function ApiReferencePage() {
@@ -24,6 +26,17 @@ export default function ApiReferencePage() {
     navigator.clipboard.writeText(text)
     setCopiedTool(toolName)
     setTimeout(() => setCopiedTool(null), 2000)
+  }
+
+  // SDK documentation links for each namespace
+  const sdkDocLinks: Record<string, string> = {
+    chats: "https://v0.dev/docs/api/chats",
+    projects: "https://v0.dev/docs/api/projects",
+    deployments: "https://v0.dev/docs/api/deployments",
+    user: "https://v0.dev/docs/api/user",
+    rate_limits: "https://v0.dev/docs/api/rate-limits",
+    hooks: "https://v0.dev/docs/api/webhooks",
+    integrations: "https://v0.dev/docs/api/integrations"
   }
 
   const tools: Record<string, Tool[]> = {
@@ -42,7 +55,8 @@ export default function ApiReferencePage() {
       "message": "Create a hero section with gradient background"
     }
   }
-}`
+}`,
+        exampleUsageLink: "/examples#contact-form"
       },
       {
         name: "chats_find",
@@ -73,7 +87,8 @@ export default function ApiReferencePage() {
       "message": "Make the background darker"
     }
   }
-}`
+}`,
+        exampleUsageLink: "/examples#contact-form"
       }
     ],
     projects: [
@@ -180,12 +195,14 @@ export default function ApiReferencePage() {
     {
       legacy: "generate_component",
       modern: "chats_create",
-      description: "Legacy alias for component generation"
+      description: "Legacy alias for component generation",
+      exampleLink: "/examples#contact-form"
     },
     {
       legacy: "iterate_component",
       modern: "chats_send_message",
-      description: "Legacy alias for component iteration"
+      description: "Legacy alias for component iteration",
+      exampleLink: "/examples#saas-landing"
     }
   ]
 
@@ -230,6 +247,50 @@ export default function ApiReferencePage() {
         </div>
       </section>
 
+      {/* Key Examples Section */}
+      <section className="py-12 border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Quick Start Examples</h2>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <Link 
+              href="/examples#contact-form"
+              className="block p-4 border rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all"
+            >
+              <h3 className="font-semibold text-gray-900 mb-1">Generate a Component</h3>
+              <p className="text-sm text-gray-600">Learn how to use chats_create to generate your first component</p>
+              <span className="inline-flex items-center gap-1 mt-2 text-sm text-blue-600">
+                View example <ChevronRight className="h-3 w-3" />
+              </span>
+            </Link>
+            <Link 
+              href="/examples#saas-landing"
+              className="block p-4 border rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all"
+            >
+              <h3 className="font-semibold text-gray-900 mb-1">Iterate on Components</h3>
+              <p className="text-sm text-gray-600">See how chats_send_message refines existing components</p>
+              <span className="inline-flex items-center gap-1 mt-2 text-sm text-blue-600">
+                View example <ChevronRight className="h-3 w-3" />
+              </span>
+            </Link>
+            <Link 
+              href="/examples#analytics-dashboard"
+              className="block p-4 border rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all"
+            >
+              <h3 className="font-semibold text-gray-900 mb-1">Complex UI Patterns</h3>
+              <p className="text-sm text-gray-600">Explore dashboard and data visualization examples</p>
+              <span className="inline-flex items-center gap-1 mt-2 text-sm text-blue-600">
+                View example <ChevronRight className="h-3 w-3" />
+              </span>
+            </Link>
+          </div>
+          <div className="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+            <p className="text-sm text-gray-700">
+              <strong>Tip:</strong> Check out our <Link href="/examples" className="text-blue-600 hover:text-blue-700">examples page</Link> for comprehensive demonstrations of each tool in action, including prompts, generated code, and iteration workflows.
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* Tools Directory */}
       <section className="py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -245,18 +306,40 @@ export default function ApiReferencePage() {
           <div className="space-y-12">
             {Object.entries(filteredTools).map(([namespace, toolList]) => (
               <div key={namespace}>
-                <h3 className="text-xl font-semibold text-gray-900 mb-6 capitalize">
-                  {namespace.replace('_', ' ')} Namespace
-                </h3>
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-xl font-semibold text-gray-900 capitalize">
+                    {namespace.replace('_', ' ')} Namespace
+                  </h3>
+                  {sdkDocLinks[namespace] && (
+                    <a
+                      href={sdkDocLinks[namespace]}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 transition-colors"
+                    >
+                      View SDK Docs
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                  )}
+                </div>
                 <div className="grid gap-6">
                   {toolList.map((tool) => (
                     <Card key={tool.name} className="overflow-hidden">
                       <CardHeader>
                         <div className="flex items-start justify-between">
-                          <div>
+                          <div className="flex-1">
                             <CardTitle className="text-lg font-mono">{tool.name}</CardTitle>
                             <CardDescription className="mt-2">{tool.description}</CardDescription>
                           </div>
+                          {tool.exampleUsageLink && (
+                            <Link 
+                              href={tool.exampleUsageLink}
+                              className="ml-4 inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 transition-colors"
+                            >
+                              <BookOpen className="h-4 w-4" />
+                              Example
+                            </Link>
+                          )}
                         </div>
                       </CardHeader>
                       <CardContent className="space-y-4">
@@ -325,7 +408,7 @@ export default function ApiReferencePage() {
               {legacyAliases.map((alias) => (
                 <Card key={alias.legacy}>
                   <CardContent className="flex items-center justify-between py-4">
-                    <div className="flex items-center space-x-4">
+                    <div className="flex-1 flex items-center space-x-4">
                       <code className="text-sm font-mono bg-gray-100 px-3 py-1 rounded">
                         {alias.legacy}
                       </code>
@@ -333,8 +416,17 @@ export default function ApiReferencePage() {
                       <code className="text-sm font-mono bg-blue-100 text-blue-700 px-3 py-1 rounded">
                         {alias.modern}
                       </code>
+                      <span className="text-sm text-gray-600 ml-4">{alias.description}</span>
                     </div>
-                    <span className="text-sm text-gray-600">{alias.description}</span>
+                    {alias.exampleLink && (
+                      <Link 
+                        href={alias.exampleLink}
+                        className="ml-4 inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 transition-colors"
+                      >
+                        <BookOpen className="h-4 w-4" />
+                        Example
+                      </Link>
+                    )}
                   </CardContent>
                 </Card>
               ))}
@@ -371,6 +463,78 @@ export V0_API_KEY="v1:your:key"
 npx v0-mcp-server --api-key "v1:your:key"`}</code>
                     </pre>
                   </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Official SDK Documentation Section */}
+          <div className="mt-16">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Official v0 SDK Documentation</h2>
+            <Card>
+              <CardHeader>
+                <CardTitle>Learn More About v0's Capabilities</CardTitle>
+                <CardDescription>
+                  The v0 MCP Server exposes a subset of the full v0 SDK capabilities. For advanced use cases and direct SDK integration, explore the official documentation.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <a
+                    href="https://v0.dev/docs"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between p-4 border rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all"
+                  >
+                    <div>
+                      <h4 className="font-semibold text-gray-900">v0 Documentation</h4>
+                      <p className="text-sm text-gray-600 mt-1">Complete guide to v0's features and capabilities</p>
+                    </div>
+                    <ExternalLink className="h-5 w-5 text-gray-400" />
+                  </a>
+                  <a
+                    href="https://v0.dev/docs/api"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between p-4 border rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all"
+                  >
+                    <div>
+                      <h4 className="font-semibold text-gray-900">API Reference</h4>
+                      <p className="text-sm text-gray-600 mt-1">Detailed SDK API documentation</p>
+                    </div>
+                    <ExternalLink className="h-5 w-5 text-gray-400" />
+                  </a>
+                  <a
+                    href="https://sdk.v0.dev"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between p-4 border rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all"
+                  >
+                    <div>
+                      <h4 className="font-semibold text-gray-900">v0 SDK</h4>
+                      <p className="text-sm text-gray-600 mt-1">Official SDK for direct integration</p>
+                    </div>
+                    <ExternalLink className="h-5 w-5 text-gray-400" />
+                  </a>
+                  <a
+                    href="https://v0.dev/docs/guides"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between p-4 border rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all"
+                  >
+                    <div>
+                      <h4 className="font-semibold text-gray-900">Guides & Tutorials</h4>
+                      <p className="text-sm text-gray-600 mt-1">Learn best practices and advanced techniques</p>
+                    </div>
+                    <ExternalLink className="h-5 w-5 text-gray-400" />
+                  </a>
+                </div>
+                <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm text-blue-900">
+                    <strong>Note:</strong> When using the v0 MCP Server through Claude, you don't need to interact with the SDK directly. 
+                    The MCP server handles all SDK calls automatically. These links are provided for users who want to explore 
+                    additional capabilities or integrate v0 directly into their applications.
+                  </p>
                 </div>
               </CardContent>
             </Card>

@@ -173,8 +173,90 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* How It Works Section */}
+      {/* Quick Start Section */}
       <section className="py-24 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">Quick Start</h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Get up and running in seconds with these simple commands
+            </p>
+          </div>
+
+          {/* Installation Method Cards - Stack vertically on mobile, horizontal on desktop */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+            {/* Claude Code Installation (Most Prominent) */}
+            <Card className="border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-blue-50 shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <CardHeader>
+                <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg flex items-center justify-center mb-4">
+                  <Zap className="h-6 w-6 text-white" />
+                </div>
+                <CardTitle className="text-xl">Claude Code (Recommended)</CardTitle>
+                <CardDescription className="text-base">
+                  The fastest way to get started - install directly into Claude
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="bg-gray-900 rounded-lg p-4 overflow-x-auto">
+                  <code className="text-green-400 text-sm whitespace-pre">claude mcp add v0-server -e V0_API_KEY="your-key-here" -- npx v0-mcp-server</code>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* NPX Quick Start */}
+            <Card className="border-gray-200 shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <CardHeader>
+                <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center mb-4">
+                  <Download className="h-6 w-6 text-white" />
+                </div>
+                <CardTitle className="text-xl">NPX</CardTitle>
+                <CardDescription className="text-base">
+                  No installation needed - run the server directly
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="bg-gray-900 rounded-lg p-4 overflow-x-auto">
+                  <code className="text-green-400 text-sm whitespace-pre">V0_API_KEY="your-key-here" npx v0-mcp-server</code>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Manual Configuration */}
+            <Card className="border-gray-200 shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <CardHeader>
+                <div className="w-12 h-12 bg-gradient-to-r from-gray-500 to-gray-600 rounded-lg flex items-center justify-center mb-4">
+                  <Settings className="h-6 w-6 text-white" />
+                </div>
+                <CardTitle className="text-xl">Manual Setup</CardTitle>
+                <CardDescription className="text-base">
+                  Configure Claude Desktop manually for advanced setups
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button asChild variant="outline" className="w-full">
+                  <Link href="/getting-started#manual-configuration">
+                    View Configuration
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Get API Key Note */}
+          <div className="mt-12 text-center">
+            <p className="text-gray-600 mb-4">
+              Need an API key? Get yours from{" "}
+              <Link href="https://v0.dev/chat/settings/keys" target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:text-purple-700 font-medium">
+                v0.dev/chat/settings/keys
+              </Link>
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works Section */}
+      <section className="py-24 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">How It Works</h2>
@@ -190,7 +272,7 @@ export default function HomePage() {
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-4">1. Get v0 API Key</h3>
               <p className="text-gray-600 mb-4">Generate your API key from v0.dev settings</p>
-              <div className="bg-gray-900 rounded-lg p-4 text-left">
+              <div className="bg-gray-900 rounded-lg p-4 text-left overflow-x-auto">
                 <code className="text-purple-400 text-sm">v0.dev/chat/settings/keys</code>
               </div>
             </div>
@@ -199,10 +281,10 @@ export default function HomePage() {
               <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Download className="h-8 w-8 text-white" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">2. Run with npx</h3>
-              <p className="text-gray-600 mb-4">No installation needed - run directly with npx</p>
-              <div className="bg-gray-900 rounded-lg p-4 text-left">
-                <code className="text-green-400 text-sm">npx v0-mcp-server</code>
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">2. Install Server</h3>
+              <p className="text-gray-600 mb-4">Use Claude Code or run with npx</p>
+              <div className="bg-gray-900 rounded-lg p-4 text-left overflow-x-auto">
+                <code className="text-green-400 text-sm">claude mcp add v0-server</code>
               </div>
             </div>
 
@@ -210,14 +292,11 @@ export default function HomePage() {
               <div className="w-16 h-16 bg-gradient-to-r from-cyan-500 to-cyan-600 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Settings className="h-8 w-8 text-white" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">3. Configure Claude</h3>
-              <p className="text-gray-600 mb-4">Add the server to your Claude Desktop config</p>
-              <div className="bg-gray-900 rounded-lg p-4 text-left">
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">3. Add API Key</h3>
+              <p className="text-gray-600 mb-4">Provide your v0 API key when prompted</p>
+              <div className="bg-gray-900 rounded-lg p-4 text-left overflow-x-auto">
                 <code className="text-blue-400 text-sm">
-                  {"// claude_desktop_config.json"}
-                  <br />
-                  <span className="text-yellow-400">{'"mcpServers"'}</span>
-                  {": { ... }"}
+                  {"--api-key YOUR_V0_API_KEY"}
                 </code>
               </div>
             </div>
@@ -228,7 +307,7 @@ export default function HomePage() {
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-4">4. Start Creating</h3>
               <p className="text-gray-600 mb-4">Generate React components with natural language</p>
-              <div className="bg-gray-900 rounded-lg p-4 text-left">
+              <div className="bg-gray-900 rounded-lg p-4 text-left overflow-x-auto">
                 <code className="text-cyan-400 text-sm">Create a login form component</code>
               </div>
             </div>
@@ -316,6 +395,80 @@ export function LoginForm() {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Examples Preview Section */}
+      <section className="py-24 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">Learn by Example</h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Explore practical examples and code snippets to get the most out of v0 MCP Server
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <CardHeader>
+                <CardTitle>Response Transformation</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <CardDescription className="mb-4">
+                  Learn how to parse and transform v0.dev responses for your specific needs
+                </CardDescription>
+                <Button asChild variant="outline" size="sm">
+                  <Link href="/examples#chat-response">
+                    View Example
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+            
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <CardHeader>
+                <CardTitle>Language Detection</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <CardDescription className="mb-4">
+                  Automatically detect programming languages for syntax highlighting
+                </CardDescription>
+                <Button asChild variant="outline" size="sm">
+                  <Link href="/examples#language-detection">
+                    View Example
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+            
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <CardHeader>
+                <CardTitle>Logging Setup</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <CardDescription className="mb-4">
+                  Implement comprehensive logging for debugging and monitoring
+                </CardDescription>
+                <Button asChild variant="outline" size="sm">
+                  <Link href="/examples#logging">
+                    View Example
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+          
+          <div className="text-center mt-12">
+            <Button asChild size="lg">
+              <Link href="/examples">
+                View All Examples
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
           </div>
         </div>
       </section>
