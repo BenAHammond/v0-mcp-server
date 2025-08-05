@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 /**
  * CLI Entry Point for v0 MCP Server
  * 
