@@ -1,5 +1,4 @@
 {
-  "buildCommand": "cd docs-site && pnpm install && pnpm build",
-  "outputDirectory": "docs-site/.next",
-  "installCommand": "cd docs-site && pnpm install"
+  "buildCommand": "cd docs-site && npx next build",
+  "outputDirectory": "docs-site/.next"
 }
