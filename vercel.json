@@ -1,4 +1,6 @@
 {
-  "buildCommand": "cd docs-site && npx next build",
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "pnpm install",
+  "buildCommand": "pnpm build",
   "outputDirectory": "docs-site/.next"
 }
