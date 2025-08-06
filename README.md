@@ -2,7 +2,7 @@
 
 Generate React components with AI directly in Claude Desktop using the Model Context Protocol.
 
-> **Documentation**: Visit [v0-mcp-server.vercel.app](https://v0-mcp-server.vercel.app) for full documentation.
+> **Documentation**: Visit [https://www.v0mcp.com/](https://www.v0mcp.com/) for full documentation.
 
 ## Quick Start
 
