@@ -58,18 +58,25 @@ function generateInputSchema(parameters: MethodParameter[]) {
 function mapParameterToSchema(param: MethodParameter): ParameterSchema {
   const baseSchema: ParameterSchema = {
     type: mapTypeToMcpType(param.type),
-    description: param.description || `${param.name} parameter`
+    description: getEnhancedParameterDescription(param)
   };
 
-  // Add type-specific constraints
+  // Add type-specific constraints and special handling
   switch (param.type) {
     case 'string':
-      return {
+      const stringSchema: ParameterSchema = {
         ...baseSchema,
         type: 'string',
         minLength: inferMinLength(param.name),
         maxLength: inferMaxLength(param.name)
       };
+      
+      // Add enum values for specific parameters
+      if (param.name === 'chatPrivacy' || param.name === 'privacy') {
+        stringSchema.enum = ['public', 'private', 'team', 'unlisted'];
+      }
+      
+      return stringSchema;
       
     case 'number':
       return {
@@ -86,6 +93,16 @@ function mapParameterToSchema(param: MethodParameter): ParameterSchema {
       };
       
     case 'object':
+      // Special handling for modelConfiguration object
+      if (param.name === 'modelConfiguration') {
+        return {
+          ...baseSchema,
+          type: 'object',
+          description: 'Model configuration for generation. Controls thinking mode and image generation capabilities.',
+          // Note: MCP schema doesn't support nested object properties directly,
+          // but we can document it in the description
+        };
+      }
       return {
         ...baseSchema,
         type: 'object'
@@ -136,46 +153,57 @@ function generateMethodDescription(method: DiscoveredMethod): string {
   
   // Generate context-aware descriptions based on common patterns
   const descriptions: Record<string, Record<string, string>> = {
+    // Focused v0 tools (no v0_ prefix)
+    v0: {
+      generate: 'Generate UI/code from a prompt. Use list_chats to see existing chats. Pass chatId to continue that conversation (e.g. "make buttons blue"), or omit for a new task. Returns files with path and content.',
+      list_chats: 'List your v0 chats (id, name, updatedAt, webUrl). Use to pick which chatId to pass to generate, or omit chatId to start new.',
+      get_chat: 'Get chat details including generated files. Returns chat info and all files from the latest version.',
+      delete_chat: 'Delete a chat. Irreversible.',
+      rate_limits: 'Check API rate limits and quotas.',
+      deploy: 'Deploy a chat to get a live URL. Optionally specify versionId, defaults to latest.'
+    },
+    // Legacy SDK namespaces (for backward compat if needed)
     chats: {
-      create: 'Create a new chat conversation for component generation',
-      find: 'Search and list existing chat conversations',
-      getById: 'Retrieve a specific chat conversation by ID',
-      sendMessage: 'Send a message to an existing chat conversation',
-      delete: 'Delete a chat conversation',
+      create: 'Create a new chat conversation for component generation.',
+      find: 'List chats.',
+      getById: 'Retrieve a chat by ID with files.',
+      sendMessage: 'Send a message to an existing chat.',
+      delete: 'Delete a chat.',
       favorite: 'Mark or unmark a chat as favorite',
-      fork: 'Create a copy of an existing chat conversation',
-      update: 'Update chat conversation properties'
+      fork: 'Create a copy of an existing chat.',
+      update: 'Update chat properties'
     },
     projects: {
-      create: 'Create a new project for organizing components',
-      find: 'Search and list existing projects',
-      getById: 'Retrieve a specific project by ID',
-      update: 'Update project properties and settings',
-      assign: 'Assign a chat conversation to a project'
+      create: 'Create a new project.',
+      find: 'List projects.',
+      getById: 'Retrieve a project by ID',
+      update: 'Update project properties',
+      assign: 'Assign a chat to a project',
+      getByChatId: 'Get project for a chat'
     },
     deployments: {
-      create: 'Deploy a component or project to hosting',
-      find: 'List existing deployments',
-      getById: 'Retrieve deployment details by ID',
+      create: 'Deploy a chat version',
+      find: 'List deployments',
+      getById: 'Get deployment details',
       delete: 'Delete a deployment',
-      findLogs: 'Retrieve deployment logs for debugging',
-      findErrors: 'Retrieve deployment errors and failures'
+      findLogs: 'Get deployment logs',
+      findErrors: 'Get deployment errors'
     },
     hooks: {
-      create: 'Create a webhook for event notifications',
-      find: 'List configured webhooks',
-      getById: 'Retrieve webhook configuration by ID',
-      update: 'Update webhook settings and URL',
-      delete: 'Delete a webhook configuration'
+      create: 'Create a webhook',
+      find: 'List webhooks',
+      getById: 'Get webhook by ID',
+      update: 'Update webhook',
+      delete: 'Delete webhook'
     },
     rateLimits: {
-      find: 'Check current API rate limit status and quotas'
+      find: 'Check API rate limits'
     },
     user: {
-      get: 'Retrieve current user profile information',
-      getBilling: 'Get user billing information and usage',
-      getPlan: 'Retrieve current subscription plan details',
-      getScopes: 'List available API scopes and permissions'
+      get: 'Get current user info',
+      getBilling: 'Get billing info',
+      getPlan: 'Get subscription plan',
+      getScopes: 'List API scopes'
     }
   };
 
@@ -363,4 +391,37 @@ function refineParameterType(param: MethodParameter, method: DiscoveredMethod): 
   }
   
   return param.type;
+}
+
+/**
+ * Gets enhanced parameter description based on parameter name and context
+ * 
+ * @param param - Method parameter
+ * @returns Enhanced description
+ */
+function getEnhancedParameterDescription(param: MethodParameter): string {
+  // Enhanced descriptions based on documentation
+  const enhancedDescriptions: Record<string, string> = {
+    message: 'The user\'s prompt describing the desired UI. Primary signal for generation.',
+    system: 'System-level instructions defining the AI\'s persona and constraints. Powerful tool for wrapper customization to enforce technical requirements.',
+    projectId: 'The ID of the project to associate this chat with. Crucial for maintaining organizational hygiene - keeps related generations together.',
+    chatPrivacy: 'Visibility setting for the chat. Options: public, private, team, unlisted. Enterprise wrappers should default to private/team for compliance.',
+    privacy: 'Privacy setting. Options: public, private, team, unlisted. Defaults may vary by API version - always set explicitly.',
+    modelConfiguration: 'Technical configuration for the generation engine. Object with thinking (boolean) and imageGenerations (boolean) properties.',
+    thinking: 'Enable Chain of Thought (CoT) reasoning. Increases latency but significantly improves handling of complex logic. Expose as "High Quality / Slower" toggle.',
+    imageGenerations: 'Control whether the model acts as a multimodal agent. If true, generates image assets (via DALL-E). If false, uses placeholders.',
+    attachments: 'Multimodal inputs such as images or design specs. Array of attachment objects.',
+    chatId: 'The identifier of the active conversation thread. Sufficient for platform to retrieve full context.',
+    versionId: 'The specific version to branch from. Enables non-linear workflows - "undo" or try different direction from previous steps.',
+    name: 'Human-readable name for the resource',
+    description: 'Optional metadata describing the resource\'s purpose',
+    scope: 'Context to check rate limits (e.g., global or per-project)',
+    deploymentId: 'The ID of the deployment to inspect',
+  };
+
+  if (enhancedDescriptions[param.name]) {
+    return enhancedDescriptions[param.name];
+  }
+
+  return param.description || `${param.name} parameter`;
 }

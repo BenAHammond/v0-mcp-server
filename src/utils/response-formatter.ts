@@ -6,6 +6,7 @@
  */
 
 import { ToolExecutionResult } from '../types.js';
+import { resolveLegacyToolName } from './aliases.js';
 
 /**
  * Formats SDK response for consistent MCP output
@@ -24,7 +25,20 @@ export function formatSdkResponse(response: any, toolName: string): any {
   }
 
   try {
-    // Handle different response patterns from v0 SDK
+    // Handle focused v0 tools
+    if (toolName === 'generate' || toolName === 'get_chat' || toolName === 'list_chats' || toolName === 'delete_chat') {
+      return formatChatResponse(response, toolName);
+    }
+    
+    if (toolName === 'rate_limits') {
+      return formatRateLimitResponse(response, toolName);
+    }
+    
+    if (toolName === 'deploy') {
+      return formatDeploymentResponse(response, toolName);
+    }
+
+    // Legacy tool name patterns (backward compat)
     if (toolName.startsWith('chats_')) {
       return formatChatResponse(response, toolName);
     }

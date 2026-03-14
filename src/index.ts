@@ -103,24 +103,18 @@ try {
   const __dirname = path.dirname(__filename);
   const scriptDir = path.resolve(__dirname, '..');
 
-  let envPath = path.join(process.cwd(), '.env');
-  let envLoaded = false;
-
-  if (fs.existsSync(envPath)) {
-    logInfo(`Loading environment from: ${envPath}`);
-    loadEnv({ path: envPath });
-    envLoaded = true;
-  } else {
-    envPath = path.join(scriptDir, '.env');
+  // Load .env only when V0_API_KEY is not already set (e.g. by MCP client config).
+  // When Cursor/Claude Code pass V0_API_KEY in env, we do not load .env.
+  if (!process.env.V0_API_KEY) {
+    let envPath = path.join(process.cwd(), '.env');
     if (fs.existsSync(envPath)) {
-      logInfo(`Loading environment from: ${envPath}`);
       loadEnv({ path: envPath });
-      envLoaded = true;
+    } else {
+      envPath = path.join(scriptDir, '.env');
+      if (fs.existsSync(envPath)) {
+        loadEnv({ path: envPath });
+      }
     }
-  }
-
-  if (!envLoaded) {
-    logWarn('No .env file found in current directory or project root');
   }
 
   if (!process.env.V0_API_KEY) {
