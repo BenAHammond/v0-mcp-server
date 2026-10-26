@@ -14,6 +14,7 @@ loadEnv();
 
 import { startServer } from '../start.js';
 import type { SimplifiedMcpServer } from '../server.js';
+import { PACKAGE_META } from '../version.js';
 import { ApiKeyManager, hasValidApiKey, getApiKeySetupInstructions } from '../auth.js';
 import { 
   CliErrorHandler, 
@@ -55,7 +56,7 @@ class V0McpCli {
     this.program
       .name('v0-mcp')
       .description('v0.dev MCP Server for component generation with Claude Code')
-      .version('1.0.0')
+      .version(PACKAGE_META.version)
       .option('-k, --api-key <key>', 'v0.dev API key')
       .option('-v, --verbose', 'enable verbose logging')
       .option('--validate', 'validate configuration and exit')
@@ -163,8 +164,8 @@ class V0McpCli {
 
       // Show configuration summary  
       console.log(chalk.blue('\n📊 Configuration Summary:'));
-      console.log(`  Name: v0-mcp-server`);
-      console.log(`  Version: 1.0.0`);
+      console.log(`  Name: ${PACKAGE_META.name}`);
+      console.log(`  Version: ${PACKAGE_META.version}`);
       console.log(`  API Key: ✅ Provided and valid`);
       console.log(`  Verbose: ${options.verbose ? 'Enabled' : 'Disabled'}`);
       console.log(`  Timeout: ${options.timeout || 30000}ms`);
@@ -187,16 +188,16 @@ class V0McpCli {
     // Validate API key before starting
     const apiKey = options.apiKey || process.env.V0_API_KEY;
     if (!apiKey) {
-      console.log(chalk.red('❌ API key is required'));
-      console.log(chalk.yellow('\n📝 Setup Instructions:'));
-      console.log(getApiKeySetupInstructions());
+      console.error(chalk.red('❌ API key is required'));
+      console.error(chalk.yellow('\n📝 Setup Instructions:'));
+      console.error(getApiKeySetupInstructions());
       process.exit(1);
     }
 
     if (!hasValidApiKey(apiKey)) {
-      console.log(chalk.red('❌ Invalid API key format'));
-      console.log(chalk.yellow('Expected format: v1:xxxxxxxxxxxxx'));
-      console.log(chalk.blue(`Get your API key from: https://v0.dev/chat/settings/keys`));
+      console.error(chalk.red('❌ Invalid API key format'));
+      console.error(chalk.yellow('Expected format: v1:xxxxxxxxxxxxx'));
+      console.error(chalk.blue(`Get your API key from: https://v0.dev/chat/settings/keys`));
       process.exit(1);
     }
 
@@ -206,25 +207,25 @@ class V0McpCli {
       const maxMemory = options.maxMemory ? parseInt(options.maxMemory, 10) : undefined;
 
       if (options.verbose) {
-        console.log(chalk.blue('🔧 Starting with configuration:'));
-        console.log(`  API Key: ${chalk.green('✅ Provided')}`);
-        console.log(`  Verbose: ${chalk.green('Enabled')}`);
-        if (timeout) console.log(`  Timeout: ${timeout}ms`);
-        if (maxMemory) console.log(`  Max Memory: ${maxMemory}MB`);
-        console.log();
+        console.error(chalk.blue('🔧 Starting with configuration:'));
+        console.error(`  API Key: ${chalk.green('✅ Provided')}`);
+        console.error(`  Verbose: ${chalk.green('Enabled')}`);
+        if (timeout) console.error(`  Timeout: ${timeout}ms`);
+        if (maxMemory) console.error(`  Max Memory: ${maxMemory}MB`);
+        console.error();
       }
 
       // Start the MCP server
-      console.log(chalk.blue('🚀 Starting Simplified v0 MCP Server...'));
-      
+      console.error(chalk.blue('🚀 Starting Simplified v0 MCP Server...'));
+
       this.server = await startServer(apiKey, options.verbose);
 
-      console.log(chalk.green('✅ Simplified v0 MCP Server started successfully!'));
-      console.log(chalk.blue('📡 Listening for MCP requests via stdio'));
-      console.log(chalk.blue(`🔍 Auto-discovered ${this.server.getDiscoveredTools().length} tools`));
-      
+      console.error(chalk.green('✅ Simplified v0 MCP Server started successfully!'));
+      console.error(chalk.blue('📡 Listening for MCP requests via stdio'));
+      console.error(chalk.blue(`🔍 Auto-discovered ${this.server.getDiscoveredTools().length} tools`));
+
       if (options.verbose) {
-        console.log(chalk.gray('💡 Server is running. Use Ctrl+C to stop.'));
+        console.error(chalk.gray('💡 Server is running. Use Ctrl+C to stop.'));
       }
 
     } catch (error) {
@@ -270,22 +271,22 @@ class V0McpCli {
    */
   private async gracefulShutdown(signal: string): Promise<void> {
     if (this.isShuttingDown) {
-      console.log(chalk.yellow('⚠️  Shutdown already in progress...'));
+      console.error(chalk.yellow('⚠️  Shutdown already in progress...'));
       return;
     }
 
     this.isShuttingDown = true;
-    console.log(chalk.yellow(`\n🛑 Received ${signal} signal, shutting down gracefully...`));
+    console.error(chalk.yellow(`\n🛑 Received ${signal} signal, shutting down gracefully...`));
 
     try {
       // Stop the MCP server
       if (this.server) {
-        console.log(chalk.blue('🔄 Stopping MCP server...'));
+        console.error(chalk.blue('🔄 Stopping MCP server...'));
         this.server = null;
-        console.log(chalk.green('✅ Server stopped gracefully'));
+        console.error(chalk.green('✅ Server stopped gracefully'));
       }
 
-      console.log(chalk.green('✅ Shutdown complete'));
+      console.error(chalk.green('✅ Shutdown complete'));
       process.exit(0);
 
     } catch (error) {
@@ -307,11 +308,11 @@ class V0McpCli {
    * Shows startup banner
    */
   private showStartupBanner(): void {
-    console.log(chalk.cyan('┌─────────────────────────────────────────┐'));
-    console.log(chalk.cyan('│') + chalk.bold('    Simplified v0 MCP Server') + '          ' + chalk.cyan('│'));
-    console.log(chalk.cyan('│') + '   Auto-Discovery + Direct Dispatch     ' + chalk.cyan('│'));
-    console.log(chalk.cyan('└─────────────────────────────────────────┘'));
-    console.log();
+    console.error(chalk.cyan('┌─────────────────────────────────────────┐'));
+    console.error(chalk.cyan('│') + chalk.bold('    Simplified v0 MCP Server') + '          ' + chalk.cyan('│'));
+    console.error(chalk.cyan('│') + '   Auto-Discovery + Direct Dispatch     ' + chalk.cyan('│'));
+    console.error(chalk.cyan('└─────────────────────────────────────────┘'));
+    console.error();
   }
 
   /**

@@ -20,6 +20,7 @@ import { createProjectTools } from './tools/v0-project-tools.js';
 import { createReportTools } from './tools/v0-report-tools.js';
 import { ConfigManager } from './config.js';
 import { ApiKeyManager } from './auth.js';
+import { PACKAGE_META } from './version.js';
 
 /**
  * MCP server that bridges Claude with the v0.dev SDK. Registers a fixed set of
@@ -40,8 +41,8 @@ export class SimplifiedMcpServer {
     
     this.server = new Server(
       {
-        name: this.config.name || 'v0-mcp-server',
-        version: this.config.version || '1.0.0'
+        name: this.config.name || PACKAGE_META.name,
+        version: this.config.version || PACKAGE_META.version
       },
       {
         capabilities: {
@@ -108,8 +109,8 @@ export class SimplifiedMcpServer {
       apiKey: fullConfig.apiKey,
       verbose: fullConfig.verbose || false,
       timeout: fullConfig.timeout || 30000,
-      name: fullConfig.name || 'v0-mcp-server',
-      version: fullConfig.version || '1.0.0'
+      name: fullConfig.name || PACKAGE_META.name,
+      version: fullConfig.version || PACKAGE_META.version
     };
   }
 
@@ -185,34 +186,23 @@ export class SimplifiedMcpServer {
       return { tools };
     });
 
-    // Handle tool calls
+    // Handle tool calls. `executeToolCall` catches every tool-level error and
+    // returns a `{ success: false, ... }` result (it never throws), so a failed
+    // call is surfaced to the client as an MCP `isError` response.
     this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
       const { name: toolName, arguments: args } = request.params;
       logInfo(`Tool call: ${toolName}`, args);
-      
-      try {
-        const result = await this.executeToolCall(toolName, args || {});
-        
-        logDebug(`Tool ${toolName} result`, result);
-        
-        return {
-          content: [{
-            type: 'text',
-            text: JSON.stringify(result, null, 2)
-          }]
-        };
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        console.error(`[MCP] Tool ${toolName} failed:`, errorMessage);
-        
-        return {
-          content: [{
-            type: 'text', 
-            text: `Error: ${errorMessage}`
-          }],
-          isError: true
-        };
-      }
+
+      const result = await this.executeToolCall(toolName, args || {});
+      logDebug(`Tool ${toolName} result`, result);
+
+      return {
+        content: [{
+          type: 'text',
+          text: JSON.stringify(result, null, 2)
+        }],
+        isError: result.success === false
+      };
     });
   }
 

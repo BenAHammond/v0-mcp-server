@@ -161,6 +161,8 @@ describe('MCP handshake over stdio (dist/index.js)', () => {
 });
 
 describe('API key format validation (dist/cli/index.js --validate)', () => {
+  const INVALID_FORMAT_MSG = '❌ API key format is invalid';
+
   beforeAll(() => {
     if (!fs.existsSync(cliPath)) {
       throw new Error('dist/cli/index.js missing — run `pnpm build` first');
@@ -182,16 +184,16 @@ describe('API key format validation (dist/cli/index.js --validate)', () => {
 
   test('rejects a key with a wrong prefix', () => {
     const out = validate('wrong_prefix_123456789012345');
-    expect(out).toContain('❌ API key format is invalid');
+    expect(out).toContain(INVALID_FORMAT_MSG);
   });
 
   test('rejects a key that is too short', () => {
     const out = validate('v0_short');
-    expect(out).toContain('❌ API key format is invalid');
+    expect(out).toContain(INVALID_FORMAT_MSG);
   });
 
   test('rejects a key that is too long', () => {
     const out = validate('v0_' + 'x'.repeat(300));
-    expect(out).toContain('❌ API key format is invalid');
+    expect(out).toContain(INVALID_FORMAT_MSG);
   });
 });

@@ -1,6 +1,7 @@
 import { SimplifiedMcpServer } from './server.js';
 import { SimplifiedConfig } from './types.js';
 import { logInfo, logError } from './utils/logs.js';
+import { PACKAGE_META } from './version.js';
 
 let serverInstance: SimplifiedMcpServer | null = null;
 
@@ -14,11 +15,9 @@ let serverInstance: SimplifiedMcpServer | null = null;
  */
 export async function startServer(apiKey?: string, verbose: boolean = false): Promise<SimplifiedMcpServer> {
   try {
-    const packageInfo = await getPackageInfo();
-
     const config: SimplifiedConfig = {
-      name: 'v0-mcp-server',
-      version: packageInfo.version || '1.0.0',
+      name: PACKAGE_META.name,
+      version: PACKAGE_META.version,
       apiKey: apiKey || process.env.V0_API_KEY || '',
       verbose,
       timeout: 30000
@@ -39,32 +38,6 @@ export async function startServer(apiKey?: string, verbose: boolean = false): Pr
     logError('Raw server initialization error:', error);
     throw new Error(`Failed to initialize MCP server: ${error instanceof Error ? error.message : String(error)}`);
   }
-}
-
-async function getPackageInfo(): Promise<{ version?: string; name?: string }> {
-  try {
-    const fs = await import('fs');
-    const path = await import('path');
-    const url = await import('url');
-
-    const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
-    const packagePath = path.join(__dirname, '..', 'package.json');
-
-    if (fs.existsSync(packagePath)) {
-      const packageJson = JSON.parse(fs.readFileSync(packagePath, 'utf-8'));
-      return {
-        version: packageJson.version,
-        name: packageJson.name
-      };
-    }
-  } catch (error) {
-    // Fallback to defaults
-  }
-
-  return {
-    version: '1.0.0',
-    name: 'v0-mcp-server'
-  };
 }
 
 process.on('SIGINT', async () => {

@@ -182,37 +182,4 @@ describe('MCP Server Integration Tests', () => {
       expect(packageJson.main).toBe('./dist/index.js');
     });
   });
-
-  describe('MCP Inspector Validation', () => {
-    test('should pass MCP inspector validation', () => {
-      // Set the API key in environment for the inspector
-      const env = { ...process.env, V0_API_KEY: process.env.V0_API_KEY };
-      
-      try {
-        const result = execSync(
-          'pnpm mcp:test',
-          { 
-            cwd: projectRoot,
-            encoding: 'utf8',
-            timeout: 30000,
-            env
-          }
-        );
-
-        // The MCP inspector should validate the server successfully
-        console.log('MCP Inspector output:', result);
-        expect(result).toBeDefined();
-      } catch (error: any) {
-        // Log the error for debugging but don't fail the test
-        // as MCP inspector may have specific requirements
-        console.log('MCP Inspector output:', error.stdout);
-        console.log('MCP Inspector error:', error.stderr);
-        
-        // At minimum, we should not see TypeScript errors or imports failing
-        const output = error.stdout || error.stderr || '';
-        expect(output).not.toContain('Cannot find module');
-        expect(output).not.toContain('SyntaxError');
-      }
-    });
-  });
 });

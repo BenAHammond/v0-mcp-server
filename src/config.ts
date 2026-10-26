@@ -6,6 +6,7 @@
  */
 
 import { PERFORMANCE_LIMITS } from './types.js';
+import { PACKAGE_META } from './version.js';
 
 export interface ServerConfig {
   name: string;
@@ -20,8 +21,8 @@ export interface ServerConfig {
  * Default configuration values
  */
 export const DEFAULT_CONFIG: Partial<ServerConfig> = {
-  name: 'v0-mcp-server',
-  version: '1.0.0',
+  name: PACKAGE_META.name,
+  version: PACKAGE_META.version,
   verbose: false
 };
 
@@ -220,36 +221,6 @@ export class ConfigManager {
     };
 
     return new ConfigManager(cliConfig);
-  }
-
-  /**
-   * Loads package.json information for server metadata
-   * @returns Package information or defaults
-   */
-  static async loadPackageInfo(): Promise<{ name: string; version: string }> {
-    try {
-      const fs = await import('fs');
-      const path = await import('path');
-      const url = await import('url');
-      
-      const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
-      const packagePath = path.join(__dirname, '..', 'package.json');
-      
-      if (fs.existsSync(packagePath)) {
-        const packageJson = JSON.parse(fs.readFileSync(packagePath, 'utf-8'));
-        return {
-          name: packageJson.name || DEFAULT_CONFIG.name!,
-          version: packageJson.version || DEFAULT_CONFIG.version!
-        };
-      }
-    } catch (error) {
-      // Fallback to defaults if package.json is not available
-    }
-    
-    return {
-      name: DEFAULT_CONFIG.name!,
-      version: DEFAULT_CONFIG.version!
-    };
   }
 
   /**
