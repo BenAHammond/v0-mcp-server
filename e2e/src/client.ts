@@ -34,6 +34,12 @@ export interface ToolCallResult {
   content: Array<{ type?: string; text?: string }>;
 }
 
+/**
+ * Drives one spawned server process over stdio JSON-RPC.
+ *
+ * The client owns the child process and a request/response correlation table;
+ * `initialize` must complete before any tool call.
+ */
 export class McpClient {
   private readonly proc: ChildProcessWithoutNullStreams;
   private buffer = "";
@@ -45,6 +51,7 @@ export class McpClient {
   /** The `initialize` response's `capabilities`, set once the handshake completes. */
   capabilities: Record<string, unknown> = {};
 
+  /** @param opts where to find the built library, which API key to pass, and the server's cwd. */
   constructor(opts: McpClientOptions) {
     this.proc = spawn("node", [opts.libPath], {
       cwd: opts.cwd,
@@ -57,6 +64,10 @@ export class McpClient {
     this.proc.stderr.on("data", () => {});
   }
 
+  /** Runs the MCP handshake (`initialize` then `notifications/initialized`).
+   *
+   * @returns a promise that resolves once the handshake completes and `serverInfo`/`capabilities` are populated.
+   */
   async initialize(): Promise<void> {
     const res = await this.request("initialize", {
       protocolVersion: "2024-11-05",
@@ -69,6 +80,7 @@ export class McpClient {
     this.notify("notifications/initialized");
   }
 
+  /** @returns the tool names the server advertises via `tools/list`. */
   async listTools(): Promise<Array<{ name: string }>> {
     const res = await this.request("tools/list", {});
     if (res.error) throw new Error(`tools/list failed: ${JSON.stringify(res.error)}`);
@@ -76,6 +88,7 @@ export class McpClient {
     return result.tools ?? [];
   }
 
+  /** @param name the tool to invoke. @param args its JSON-RPC `arguments` payload. @returns the shaped `content` and `isError` flag. */
   async callTool(name: string, args: Record<string, unknown>): Promise<ToolCallResult> {
     const res = await this.request("tools/call", { name, arguments: args });
     const result = (res.result ?? {}) as {
@@ -90,6 +103,7 @@ export class McpClient {
     };
   }
 
+  /** Terminates the spawned server process. */
   close(): void {
     this.proc.kill("SIGTERM");
   }

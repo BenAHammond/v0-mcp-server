@@ -46,6 +46,7 @@ export function step(name: string, run: Step["run"]): Step {
   return { name, run };
 }
 
+/** @param flow the flow to run. @param ctx a spawned, initialized client plus the project root. @returns the per-step outcome, stopping at the first failure. */
 export async function runFlow(flow: Flow, ctx: FlowContext): Promise<FlowResult> {
   const steps: StepResult[] = [];
 
