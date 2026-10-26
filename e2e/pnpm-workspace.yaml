@@ -1,0 +1,2 @@
+# The e2e harness is a standalone package, not part of the implementor's workspace.
+packages: []
