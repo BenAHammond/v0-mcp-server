@@ -51,18 +51,20 @@ function createGenerateTool(client: any): DiscoveredMethod | null {
     method: 'generate',
     toolName: 'generate',
     description:
-      'Generate or modify UI from a prompt. Pass chatId to continue an existing conversation (e.g. "make buttons blue"), or omit chatId to start a new chat. Optional controls: system (persona/constraints), attachments (image/design URLs), chatPrivacy, and model configuration (modelId, thinking, imageGenerations). Returns generated files with path and content.',
+      'Generate or modify UI from a prompt. Pass chatId to continue an existing conversation (e.g. "make buttons blue"), or omit chatId to start a new chat. Optional controls: system (persona/constraints), attachments (image/design URLs), chatPrivacy, model configuration (modelId, thinking, imageGenerations), and responseMode. Returns generated files with path and content.',
     sdkFunction: async (params: any) => {
       const prompt = requireString(params?.prompt, 'prompt');
       const chatId = typeof params?.chatId === 'string' ? params.chatId.trim() : undefined;
       const system = typeof params?.system === 'string' ? params.system.trim() : undefined;
+      const responseMode = typeof params?.responseMode === 'string' ? params.responseMode.trim() : undefined;
       const modelConfiguration = buildModelConfiguration(params);
 
       const shared = compact({
         message: prompt,
         system,
         attachments: params?.attachments,
-        modelConfiguration
+        modelConfiguration,
+        responseMode
       });
 
       if (chatId) {
@@ -128,6 +130,12 @@ function createGenerateTool(client: any): DiscoveredMethod | null {
         type: 'boolean',
         required: false,
         description: 'Generate image assets (true) or use placeholders (false)'
+      },
+      {
+        name: 'responseMode',
+        type: 'string',
+        required: false,
+        description: 'How the API returns the result: sync (wait for the full response), async (return a job to poll), or experimental_stream (stream response events)'
       }
     ],
     returnType: 'object',
