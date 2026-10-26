@@ -1,0 +1,82 @@
+import { SimplifiedMcpServer } from './server.js';
+import { SimplifiedConfig } from './types.js';
+import { logInfo, logError } from './utils/logs.js';
+
+let serverInstance: SimplifiedMcpServer | null = null;
+
+/**
+ * Builds the server config from the API key and environment, then starts the
+ * MCP server over stdio. Returns the running server instance.
+ *
+ * @param apiKey - v0.dev API key (falls back to `V0_API_KEY`)
+ * @param verbose - Enable verbose logging
+ * @returns The started server instance
+ */
+export async function startServer(apiKey?: string, verbose: boolean = false): Promise<SimplifiedMcpServer> {
+  try {
+    const packageInfo = await getPackageInfo();
+
+    const config: SimplifiedConfig = {
+      name: 'v0-mcp-server',
+      version: packageInfo.version || '1.0.0',
+      apiKey: apiKey || process.env.V0_API_KEY || '',
+      verbose,
+      timeout: 30000
+    };
+
+    if (!config.apiKey) {
+      throw new Error(
+        'V0_API_KEY is required. Provide it via --api-key argument or V0_API_KEY environment variable.\n' +
+        'Get your API key from: https://v0.dev/chat/settings/keys'
+      );
+    }
+
+    const server = new SimplifiedMcpServer(config);
+    await server.start();
+    serverInstance = server;
+    return server;
+  } catch (error) {
+    logError('Raw server initialization error:', error);
+    throw new Error(`Failed to initialize MCP server: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+async function getPackageInfo(): Promise<{ version?: string; name?: string }> {
+  try {
+    const fs = await import('fs');
+    const path = await import('path');
+    const url = await import('url');
+
+    const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
+    const packagePath = path.join(__dirname, '..', 'package.json');
+
+    if (fs.existsSync(packagePath)) {
+      const packageJson = JSON.parse(fs.readFileSync(packagePath, 'utf-8'));
+      return {
+        version: packageJson.version,
+        name: packageJson.name
+      };
+    }
+  } catch (error) {
+    // Fallback to defaults
+  }
+
+  return {
+    version: '1.0.0',
+    name: 'v0-mcp-server'
+  };
+}
+
+process.on('SIGINT', async () => {
+  if (serverInstance && serverInstance.isRunning()) {
+    logInfo('Graceful shutdown...');
+  }
+  process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
+  if (serverInstance && serverInstance.isRunning()) {
+    logInfo('Graceful shutdown...');
+  }
+  process.exit(0);
+});

@@ -1,6 +1,12 @@
 import { DiscoveredMethod } from '../types.js';
 import { logManager } from '../utils/logs.js';
 
+/**
+ * Creates the debug logging tools that expose the in-process `LogManager`
+ * (`logs_get`, `logs_read_debug_file`, `logs_summary`, `logs_clear`) to the LLM.
+ *
+ * @returns Array of debug tool definitions
+ */
 export function createLogsTools(): DiscoveredMethod[] {
   return [
     {

@@ -18,6 +18,15 @@ export interface ValidationError {
 }
 
 /**
+ * Builds the standard "not a string" type error.
+ */
+const mustBeStringError = (fieldName: string): ValidationError => ({
+  field: fieldName,
+  message: `${fieldName} must be a string`,
+  code: 'INVALID_TYPE'
+});
+
+/**
  * Validates that a value is not null, undefined, or empty string
  * @param fieldName - Name of the field being validated (for error messages)
  * @param value - Value to validate
@@ -61,11 +70,7 @@ export const validateStringLength = (
   value: string
 ): Either<ValidationError, string> => {
   if (typeof value !== 'string') {
-    return left({
-      field: fieldName,
-      message: `${fieldName} must be a string`,
-      code: 'INVALID_TYPE'
-    });
+    return left(mustBeStringError(fieldName));
   }
 
   const length = value.length;
@@ -100,11 +105,7 @@ export const validateEmail = (
   value: string
 ): Either<ValidationError, string> => {
   if (typeof value !== 'string') {
-    return left({
-      field: fieldName,
-      message: `${fieldName} must be a string`,
-      code: 'INVALID_TYPE'
-    });
+    return left(mustBeStringError(fieldName));
   }
 
   // Comprehensive email regex pattern
@@ -153,11 +154,7 @@ export const validateUrl = (
   allowedProtocols: string[] = ['http:', 'https:']
 ): Either<ValidationError, string> => {
   if (typeof value !== 'string') {
-    return left({
-      field: fieldName,
-      message: `${fieldName} must be a string`,
-      code: 'INVALID_TYPE'
-    });
+    return left(mustBeStringError(fieldName));
   }
 
   let url: URL;
@@ -226,11 +223,7 @@ export const validatePattern = (
   errorMessage?: string
 ): Either<ValidationError, string> => {
   if (typeof value !== 'string') {
-    return left({
-      field: fieldName,
-      message: `${fieldName} must be a string`,
-      code: 'INVALID_TYPE'
-    });
+    return left(mustBeStringError(fieldName));
   }
 
   if (!pattern.test(value)) {

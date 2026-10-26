@@ -1,17 +1,22 @@
 /**
  * Response Formatting Utilities
- * 
- * Formats SDK responses for consistent MCP output and handles
- * backward compatibility response transformations.
+ *
+ * Formats SDK responses for consistent MCP output. Tools are expected to shape
+ * their own results (a concise, LLM-friendly object) inside their `sdkFunction`;
+ * this module only handles the raw SDK shapes that need post-processing.
  */
 
 import { ToolExecutionResult } from '../types.js';
-import { resolveLegacyToolName } from './aliases.js';
 
 /**
- * Formats SDK response for consistent MCP output
- * 
- * @param response - Raw SDK response
+ * Formats an SDK response for consistent MCP output.
+ *
+ * Raw `ChatDetail` responses (returned by create/sendMessage/init/resolveTask
+ * and marked with `object: 'chat'`) have their files extracted for display.
+ * Everything else is treated as an already-shaped tool result and passed
+ * through untouched so no data is dropped.
+ *
+ * @param response - Raw SDK response or shaped tool result
  * @param toolName - Name of the tool that generated the response
  * @returns Formatted response for MCP
  */
@@ -25,42 +30,12 @@ export function formatSdkResponse(response: any, toolName: string): any {
   }
 
   try {
-    // Handle focused v0 tools
-    if (toolName === 'generate' || toolName === 'get_chat' || toolName === 'list_chats' || toolName === 'delete_chat') {
-      return formatChatResponse(response, toolName);
-    }
-    
-    if (toolName === 'rate_limits') {
-      return formatRateLimitResponse(response, toolName);
-    }
-    
-    if (toolName === 'deploy') {
-      return formatDeploymentResponse(response, toolName);
+    if (response.object === 'chat') {
+      return formatChatDetailResponse(response, toolName);
     }
 
-    // Legacy tool name patterns (backward compat)
-    if (toolName.startsWith('chats_')) {
-      return formatChatResponse(response, toolName);
-    }
-    
-    if (toolName.startsWith('projects_')) {
-      return formatProjectResponse(response, toolName);
-    }
-    
-    if (toolName.startsWith('deployments_')) {
-      return formatDeploymentResponse(response, toolName);
-    }
-    
-    if (toolName.startsWith('rate_limits_')) {
-      return formatRateLimitResponse(response, toolName);
-    }
-    
-    if (toolName.startsWith('user_')) {
-      return formatUserResponse(response, toolName);
-    }
-
-    // Default formatting for unknown tool types
-    return formatGenericResponse(response, toolName);
+    // Tool already returned a shaped result — pass it through without dropping data.
+    return { success: true, toolName, ...response };
   } catch (error) {
     return {
       success: false,
@@ -72,212 +47,48 @@ export function formatSdkResponse(response: any, toolName: string): any {
 }
 
 /**
- * Formats chat-related responses (create, sendMessage, etc.)
+ * Formats a raw SDK `ChatDetail` response: extracts files from
+ * `latestVersion.files` and surfaces chat metadata for display.
  */
-function formatChatResponse(response: any, toolName: string): any {
+function formatChatDetailResponse(response: any, toolName: string): any {
+  const files = (response.latestVersion?.files || []).map((file: any) => ({
+    path: file.name,
+    content: file.content,
+    locked: file.locked ?? false
+  }));
+
   const formatted: any = {
     success: true,
-    toolName
+    toolName,
+    chatId: response.id,
+    previewUrl: response.webUrl,
+    privacy: response.privacy,
+    projectId: response.projectId
   };
 
-  // Extract common chat fields
-  if (response.id) {
-    formatted.chatId = response.id;
-  }
-  
-  if (response.webUrl) {
-    formatted.previewUrl = response.webUrl;
-  }
-  
-  if (response.apiUrl) {
-    formatted.apiUrl = response.apiUrl;
-  }
-
-  // Extract files if available
-  const files = extractFilesFromChatResponse(response);
-  if (files.length > 0) {
-    formatted.files = files.map((file: any) => ({
-      path: file.name,
-      content: file.content,
-      locked: file.locked || false
-    }));
-    
-    formatted.message = `Generated ${files.length} file(s)`;
-    formatted.formattedContent = formatFilesForDisplay(files, response.id, response.webUrl);
-  }
-
-  // Add other useful fields
   if (response.name || response.title) {
     formatted.title = response.name || response.title;
   }
-  
-  if (response.createdAt) {
-    formatted.createdAt = response.createdAt;
-  }
-  
-  if (response.updatedAt) {
-    formatted.updatedAt = response.updatedAt;
+
+  if (files.length > 0) {
+    formatted.files = files;
+    formatted.message = `Generated ${files.length} file(s)`;
   }
 
   return formatted;
 }
 
 /**
- * Formats project-related responses
- */
-function formatProjectResponse(response: any, toolName: string): any {
-  const formatted: any = {
-    success: true,
-    toolName
-  };
-
-  if (response.id) {
-    formatted.projectId = response.id;
-  }
-  
-  if (response.name) {
-    formatted.name = response.name;
-  }
-  
-  if (response.description) {
-    formatted.description = response.description;
-  }
-  
-  if (response.webUrl) {
-    formatted.webUrl = response.webUrl;
-  }
-
-  // Handle project arrays (for find operations)
-  if (Array.isArray(response)) {
-    return {
-      success: true,
-      toolName,
-      projects: response.map(project => ({
-        id: project.id,
-        name: project.name,
-        description: project.description,
-        webUrl: project.webUrl,
-        createdAt: project.createdAt,
-        updatedAt: project.updatedAt
-      })),
-      count: response.length
-    };
-  }
-
-  return formatted;
-}
-
-/**
- * Formats deployment-related responses
- */
-function formatDeploymentResponse(response: any, toolName: string): any {
-  const formatted: any = {
-    success: true,
-    toolName
-  };
-
-  if (response.id) {
-    formatted.deploymentId = response.id;
-  }
-  
-  if (response.url) {
-    formatted.deploymentUrl = response.url;
-  }
-  
-  if (response.status) {
-    formatted.status = response.status;
-  }
-
-  // Handle deployment arrays
-  if (Array.isArray(response)) {
-    return {
-      success: true,
-      toolName,
-      deployments: response.map(deployment => ({
-        id: deployment.id,
-        url: deployment.url,
-        status: deployment.status,
-        createdAt: deployment.createdAt,
-        updatedAt: deployment.updatedAt
-      })),
-      count: response.length
-    };
-  }
-
-  // Handle logs (for findLogs)
-  if (response.logs && Array.isArray(response.logs)) {
-    formatted.logs = response.logs;
-    formatted.logCount = response.logs.length;
-  }
-
-  return formatted;
-}
-
-/**
- * Formats rate limit responses
- */
-function formatRateLimitResponse(response: any, toolName: string): any {
-  return {
-    success: true,
-    toolName,
-    rateLimits: response.rateLimits || response,
-    message: 'Rate limits retrieved successfully'
-  };
-}
-
-/**
- * Formats user-related responses
- */
-function formatUserResponse(response: any, toolName: string): any {
-  const formatted: any = {
-    success: true,
-    toolName
-  };
-
-  // Remove sensitive information and format safely
-  if (response.id) {
-    formatted.userId = response.id;
-  }
-  
-  if (response.email) {
-    // Mask email for privacy
-    formatted.email = maskEmail(response.email);
-  }
-  
-  if (response.name) {
-    formatted.name = response.name;
-  }
-
-  // Handle billing info (remove sensitive data)
-  if (response.billing) {
-    formatted.billing = {
-      plan: response.billing.plan,
-      status: response.billing.status
-      // Omit payment details, amounts, etc.
-    };
-  }
-
-  return formatted;
-}
-
-/**
- * Formats generic responses for unknown tool types
- */
-function formatGenericResponse(response: any, toolName: string): any {
-  return {
-    success: true,
-    toolName,
-    data: response,
-    message: `${toolName} executed successfully`
-  };
-}
-
-/**
- * Formats error responses with consistent structure
+ * Formats error responses with a consistent structure.
+ *
+ * @param error - The error to format
+ * @param toolName - Name of the tool that errored
+ * @param context - Optional execution phase/context label
+ * @returns Standardized error response object
  */
 export function formatErrorResponse(error: any, toolName: string, context?: string): any {
   const errorMessage = error instanceof Error ? error.message : String(error);
-  
+
   return {
     success: false,
     toolName,
@@ -288,147 +99,41 @@ export function formatErrorResponse(error: any, toolName: string, context?: stri
 }
 
 /**
- * Extracts files from various chat response formats
- */
-function extractFilesFromChatResponse(response: any): any[] {
-  console.error('[DEBUG] Extracting files from response:', JSON.stringify(response, null, 2));
-  
-  // Try different possible locations for files
-  if (response.latestVersion && response.latestVersion.files) {
-    console.error('[DEBUG] Found files in latestVersion.files');
-    return response.latestVersion.files;
-  }
-  
-  if (response.files) {
-    console.error('[DEBUG] Found files in files');
-    return response.files;
-  }
-  
-  if (response.version && response.version.files) {
-    console.error('[DEBUG] Found files in version.files');
-    return response.version.files;
-  }
-  
-  // Check for data wrapper
-  if (response.data) {
-    console.error('[DEBUG] Found data wrapper, checking inside');
-    if (response.data.latestVersion && response.data.latestVersion.files) {
-      console.error('[DEBUG] Found files in data.latestVersion.files');
-      return response.data.latestVersion.files;
-    }
-    if (response.data.files) {
-      console.error('[DEBUG] Found files in data.files');
-      return response.data.files;
-    }
-  }
-  
-  console.error('[DEBUG] No files found in response');
-  return [];
-}
-
-/**
- * Formats files for display in Claude Code
- */
-function formatFilesForDisplay(files: any[], chatId?: string, previewUrl?: string): string {
-  if (files.length === 0) {
-    return 'No files generated';
-  }
-
-  let formatted = `Generated ${files.length} file(s)`;
-  
-  if (chatId) {
-    formatted += ` (Chat ID: ${chatId})`;
-  }
-  
-  formatted += '\n\n';
-  
-  for (const file of files) {
-    const extension = getFileExtension(file.name);
-    formatted += `## ${file.name}\n\n\`\`\`${extension}\n${file.content}\n\`\`\`\n\n`;
-  }
-  
-  if (previewUrl) {
-    formatted += `Preview: ${previewUrl}\n`;
-  }
-  
-  formatted += '\nUse the Write tool to save these files to your project.';
-  
-  return formatted;
-}
-
-/**
- * Gets file extension for syntax highlighting
- */
-function getFileExtension(filename: string): string {
-  const ext = filename.split('.').pop()?.toLowerCase();
-  
-  const extensionMap: Record<string, string> = {
-    'ts': 'typescript',
-    'tsx': 'typescript', 
-    'js': 'javascript',
-    'jsx': 'javascript',
-    'css': 'css',
-    'scss': 'scss',
-    'json': 'json',
-    'md': 'markdown',
-    'html': 'html',
-    'py': 'python',
-    'java': 'java',
-    'cpp': 'cpp',
-    'c': 'c'
-  };
-  
-  return extensionMap[ext || ''] || 'text';
-}
-
-/**
- * Masks email address for privacy
- */
-function maskEmail(email: string): string {
-  const [username, domain] = email.split('@');
-  if (!username || !domain) return '***@***.***';
-  
-  const maskedUsername = username.length > 2 
-    ? username.substring(0, 2) + '*'.repeat(username.length - 2)
-    : '**';
-    
-  return `${maskedUsername}@${domain}`;
-}
-
-/**
- * Formats execution result for MCP response text
+ * Formats an execution result into plain text for the MCP response.
+ *
+ * @param result - The tool execution result to format
+ * @returns Human-readable text representation
  */
 export function formatExecutionResult(result: ToolExecutionResult): string {
-  // Check for legacy tool response format
   if (result.success && result.result) {
     if (result.result.formattedContent) {
       return result.result.formattedContent;
     }
-    
+
     if (result.result.message) {
       return result.result.message;
     }
   }
-  
+
   if (result.success && result.formattedResult) {
     if (typeof result.formattedResult === 'string') {
       return result.formattedResult;
     }
-    
+
     if (result.formattedResult.formattedContent) {
       return result.formattedResult.formattedContent;
     }
-    
+
     if (result.formattedResult.message) {
       return result.formattedResult.message;
     }
-    
+
     return JSON.stringify(result.formattedResult, null, 2);
   }
-  
+
   if (!result.success && result.error) {
     return `Error: ${result.error}`;
   }
-  
+
   return 'Operation completed successfully';
 }

@@ -4,11 +4,16 @@ import { Either, ToolSchema, ParameterSchema } from '../types.js';
 export const left = <L, R>(value: L): Either<L, R> => ({ _tag: 'Left', left: value });
 export const right = <L, R>(value: R): Either<L, R> => ({ _tag: 'Right', right: value });
 
-import { 
-  validateSecureString, 
-  detectSecurityIssues 
-} from './validation.js';
+import { validateSecureString } from './validation.js';
 
+/**
+ * Validates tool call parameters against the tool's JSON schema.
+ *
+ * @param toolName - Name of the tool being invoked
+ * @param params - Raw arguments supplied by the caller
+ * @param schema - The tool's MCP schema definition
+ * @returns Either a validation error or the coerced/validated parameters
+ */
 export function validateToolParameters(
   toolName: string,
   params: any,
@@ -225,6 +230,13 @@ function validateIdFormat(id: string): Either<Error, string> {
   return right(trimmedId);
 }
 
+/**
+ * Validates a component-generation description: non-empty, within length
+ * bounds, and free of security issues.
+ *
+ * @param description - The description string to validate
+ * @returns Either a validation error or the sanitized description
+ */
 export function validateComponentDescription(description: string): Either<Error, string> {
   if (!description || typeof description !== 'string') {
     return left(new Error('Description must be a non-empty string'));
@@ -244,12 +256,16 @@ export function validateComponentDescription(description: string): Either<Error,
   if (securityValidation._tag === 'Left') {
     return left(new Error(`Description failed security validation: ${securityValidation.left.message}`));
   }
-  
-  return right(securityValidation.right);
 
-  return right(trimmed);
+  return right(securityValidation.right);
 }
 
+/**
+ * Validates a chat ID: non-empty string with a valid identifier format.
+ *
+ * @param chatId - The chat ID string to validate
+ * @returns Either a validation error or the trimmed chat ID
+ */
 export function validateChatId(chatId: string): Either<Error, string> {
   if (!chatId || typeof chatId !== 'string') {
     return left(new Error('Chat ID must be a non-empty string'));

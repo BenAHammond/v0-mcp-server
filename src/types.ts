@@ -32,6 +32,8 @@ export interface DiscoveredMethod {
   namespace: string;
   method: string;
   toolName: string;
+  /** Human-readable tool description shown to the LLM (falls back to namespace-derived text). */
+  description?: string;
   sdkFunction: Function;
   parameters: MethodParameter[];
   returnType: string;

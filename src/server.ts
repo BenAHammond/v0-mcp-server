@@ -15,9 +15,16 @@ import { formatSdkResponse, formatErrorResponse, formatExecutionResult } from '.
 import { logInfo, logError, logDebug } from './utils/logs.js';
 import { createLogsTools } from './tools/logs-tool.js';
 import { createV0Tools } from './tools/v0-tools.js';
+import { createAgentTools } from './tools/v0-agent-tools.js';
+import { createProjectTools } from './tools/v0-project-tools.js';
+import { createReportTools } from './tools/v0-report-tools.js';
 import { ConfigManager } from './config.js';
 import { ApiKeyManager } from './auth.js';
 
+/**
+ * MCP server that bridges Claude with the v0.dev SDK. Registers a fixed set of
+ * tools, dispatches tool calls to the SDK client, and communicates over stdio.
+ */
 export class SimplifiedMcpServer {
   private server: Server;
   private config: SimplifiedConfig;
@@ -25,6 +32,9 @@ export class SimplifiedMcpServer {
   private toolMapping: ToolMapping;
   private isStarted = false;
 
+  /**
+   * @param config - Partial configuration; defaults are filled in by `ConfigManager`
+   */
   constructor(config?: Partial<SimplifiedConfig>) {
     this.config = this.createSimplifiedConfig(config);
     
@@ -47,6 +57,13 @@ export class SimplifiedMcpServer {
     };
   }
 
+  /**
+   * Validates the API key, creates the v0 client, registers tools and request
+   * handlers, then connects to the stdio transport. Idempotent guard: throws
+   * if the server is already started.
+   *
+   * @returns A promise that resolves once the server is connected
+   */
   async start(): Promise<void> {
     if (this.isStarted) {
       throw new Error('Server is already started');
@@ -114,12 +131,19 @@ export class SimplifiedMcpServer {
   }
 
   private async registerTools(): Promise<void> {
-    // Register the 6 focused v0 tools
-    const v0Tools = createV0Tools(this.v0Client);
-    
-    for (const tool of v0Tools) {
-      this.registerTool(tool);
-      logDebug(`Registered: ${tool.toolName}`);
+    // Register the v0 tool sets (core, agentic, project/env, reporting)
+    const toolSets = [
+      createV0Tools(this.v0Client),
+      createAgentTools(this.v0Client),
+      createProjectTools(this.v0Client),
+      createReportTools(this.v0Client)
+    ];
+
+    for (const toolSet of toolSets) {
+      for (const tool of toolSet) {
+        this.registerTool(tool);
+        logDebug(`Registered: ${tool.toolName}`);
+      }
     }
 
     // Add debug logging tools
@@ -192,6 +216,14 @@ export class SimplifiedMcpServer {
     });
   }
 
+  /**
+   * Look up a tool by name, validate its parameters, invoke the wrapped SDK
+   * function, and format the result.
+   *
+   * @param toolName - Registered tool name
+   * @param params - Raw tool arguments
+   * @returns Execution result with success flag and formatted output
+   */
   async executeToolCall(toolName: string, params: any): Promise<ToolExecutionResult> {
     const startTime = Date.now();
 
@@ -258,14 +290,23 @@ export class SimplifiedMcpServer {
     }
   }
 
+  /**
+   * Whether the server has been started and is listening over stdio.
+   */
   isRunning(): boolean {
     return this.isStarted;
   }
 
+  /**
+   * Returns a shallow copy of the active server configuration.
+   */
   getConfig(): SimplifiedConfig {
     return { ...this.config };
   }
 
+  /**
+   * Returns the registered tool definitions in registration order.
+   */
   getDiscoveredTools(): DiscoveredMethod[] {
     return Array.from(this.toolMapping.discoveredTools.values());
   }

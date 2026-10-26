@@ -43,14 +43,14 @@ export class ServerTestHelper {
       // Capture output
       this.process.stdout?.on('data', (data) => {
         this.output += data.toString();
-        if (this.output.includes('✅ v0 MCP Server started successfully!')) {
+        if (this.output.includes('✅ Simplified v0 MCP Server started successfully!')) {
           hasStarted = true;
         }
       });
 
       this.process.stderr?.on('data', (data) => {
         this.output += data.toString();
-        if (this.output.includes('✅ v0 MCP Server started successfully!')) {
+        if (this.output.includes('✅ Simplified v0 MCP Server started successfully!')) {
           hasStarted = true;
         }
       });

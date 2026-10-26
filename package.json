@@ -44,8 +44,8 @@
   "type": "module",
   "types": "./dist/index.d.ts",
   "bin": {
-    "v0-mcp-server": "./dist/cli/index.js",
-    "v0-mcp": "./dist/cli/index.js"
+    "v0-mcp-server": "dist/cli/index.js",
+    "v0-mcp": "dist/cli/index.js"
   },
   "files": [
     "dist/**/*",
@@ -54,7 +54,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/BenAHammond/v0-mcp-server.git"
+    "url": "git+https://github.com/BenAHammond/v0-mcp-server.git"
   },
   "homepage": "https://github.com/BenAHammond/v0-mcp-server#readme",
   "bugs": {
@@ -65,24 +65,21 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.27.1",
-    "@types/uuid": "^10.0.0",
-    "chalk": "^5.6.2",
-    "commander": "^14.0.3",
-    "dotenv": "^17.3.1",
-    "uuid": "^11.1.0",
-    "v0-sdk": "^0.6.3"
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "chalk": "^6.0.1",
+    "commander": "^15.0.0",
+    "dotenv": "^18.0.9",
+    "v0-sdk": "^0.16.7"
   },
   "devDependencies": {
-    "@playwright/test": "^1.58.2",
+    "@playwright/test": "^1.64.1",
     "@types/jest": "^30.0.0",
-    "@types/node": "^24.12.0",
-    "autoprefixer": "^10.4.27",
-    "jest": "^30.3.0",
+    "@types/node": "^26.6.5",
+    "jest": "^30.5.2",
     "rimraf": "^6.1.3",
     "tree-kill": "^1.2.2",
-    "ts-jest": "^29.4.6",
-    "tsup": "^8.5.1",
-    "tsx": "^4.21.0"
+    "ts-jest": "^29.4.15",
+    "tsup": "^9.0.0",
+    "tsx": "^4.23.15"
   }
 }

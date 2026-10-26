@@ -12,7 +12,8 @@ import { config as loadEnv } from 'dotenv';
 // Load environment variables from .env file
 loadEnv();
 
-import { startServer, SimplifiedMcpServer } from '../index.js';
+import { startServer } from '../start.js';
+import type { SimplifiedMcpServer } from '../server.js';
 import { ApiKeyManager, hasValidApiKey, getApiKeySetupInstructions } from '../auth.js';
 import { 
   CliErrorHandler, 

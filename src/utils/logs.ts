@@ -1,6 +1,4 @@
-import fs from 'node:fs';
-import { promises as fsPromises } from 'node:fs';
-import path from 'node:path';
+import fs, { promises as fsPromises } from 'node:fs';
 
 export interface LogEntry {
   timestamp: string;
@@ -9,6 +7,10 @@ export interface LogEntry {
   context?: any;
 }
 
+/**
+ * In-memory log manager that buffers recent entries, mirrors them to a debug
+ * file, and exposes query helpers for the debug logging tools.
+ */
 export class LogManager {
   private static instance: LogManager;
   private logs: LogEntry[] = [];
@@ -17,6 +19,11 @@ export class LogManager {
 
   private constructor() {}
 
+  /**
+   * Returns the shared singleton instance of the log manager.
+   *
+   * @returns The singleton `LogManager` instance
+   */
   static getInstance(): LogManager {
     if (!LogManager.instance) {
       LogManager.instance = new LogManager();
@@ -25,7 +32,11 @@ export class LogManager {
   }
 
   /**
-   * Add a log entry to the in-memory buffer
+   * Add a log entry to the in-memory buffer.
+   *
+   * @param level - Severity level of the log entry
+   * @param message - Log message text
+   * @param context - Optional structured context attached to the entry
    */
   addLog(level: LogEntry['level'], message: string, context?: any): void {
     const entry: LogEntry = {
@@ -44,14 +55,20 @@ export class LogManager {
   }
 
   /**
-   * Get recent logs from memory
+   * Get recent logs from memory.
+   *
+   * @param limit - Maximum number of entries to return
    */
   getRecentLogs(limit: number = 100): LogEntry[] {
     return this.logs.slice(-limit);
   }
 
   /**
-   * Get logs filtered by level
+   * Get recent logs filtered by level.
+   *
+   * @param level - Severity level to filter by
+   * @param limit - Maximum number of entries to return
+   * @returns Matching log entries, newest last
    */
   getLogsByLevel(level: LogEntry['level'], limit: number = 100): LogEntry[] {
     return this.logs
@@ -60,7 +77,11 @@ export class LogManager {
   }
 
   /**
-   * Search logs by message content
+   * Search logs by message content (case-insensitive).
+   *
+   * @param query - Substring to match against log messages
+   * @param limit - Maximum number of entries to return
+   * @returns Matching log entries, newest last
    */
   searchLogs(query: string, limit: number = 100): LogEntry[] {
     const lowerQuery = query.toLowerCase();
@@ -70,7 +91,10 @@ export class LogManager {
   }
 
   /**
-   * Read logs from the debug file
+   * Read the most recent lines from the on-disk debug log file.
+   *
+   * @param lines - Number of trailing lines to return
+   * @returns The requested lines, or a status message if the file is missing/unreadable
    */
   async readDebugFile(lines: number = 100): Promise<string[]> {
     try {
@@ -86,7 +110,9 @@ export class LogManager {
   }
 
   /**
-   * Get a summary of current log state
+   * Get a summary of current log state.
+   *
+   * @returns Aggregate counts, recent errors, and debug-file availability
    */
   getLogSummary(): {
     totalLogs: number;
@@ -119,7 +145,7 @@ export class LogManager {
   }
 
   /**
-   * Clear in-memory logs
+   * Clear in-memory logs.
    */
   clearLogs(): void {
     this.logs = [];
@@ -138,6 +164,12 @@ function writeToDebugFile(message: string): void {
   }
 }
 
+/**
+ * Log an informational message to stderr and the debug file.
+ *
+ * @param message - Message to log
+ * @param context - Optional structured context
+ */
 export function logInfo(message: string, context?: any): void {
   logManager.addLog('info', message, context);
   const fullMessage = `[MCP] ${message}${context ? ' ' + JSON.stringify(context) : ''}`;
@@ -145,6 +177,12 @@ export function logInfo(message: string, context?: any): void {
   writeToDebugFile(`INFO: ${message}${context ? ' ' + JSON.stringify(context) : ''}`);
 }
 
+/**
+ * Log an error message to stderr and the debug file.
+ *
+ * @param message - Message to log
+ * @param context - Optional structured context
+ */
 export function logError(message: string, context?: any): void {
   logManager.addLog('error', message, context);
   const fullMessage = `[MCP] ERROR: ${message}${context ? ' ' + JSON.stringify(context) : ''}`;
@@ -152,6 +190,12 @@ export function logError(message: string, context?: any): void {
   writeToDebugFile(`ERROR: ${message}${context ? ' ' + JSON.stringify(context) : ''}`);
 }
 
+/**
+ * Log a debug message to stderr (only when `VERBOSE=true`) and the debug file.
+ *
+ * @param message - Message to log
+ * @param context - Optional structured context
+ */
 export function logDebug(message: string, context?: any): void {
   logManager.addLog('debug', message, context);
   const fullMessage = `[MCP] DEBUG: ${message}${context ? ' ' + JSON.stringify(context) : ''}`;
@@ -161,6 +205,12 @@ export function logDebug(message: string, context?: any): void {
   writeToDebugFile(`DEBUG: ${message}${context ? ' ' + JSON.stringify(context) : ''}`);
 }
 
+/**
+ * Log a warning message to stderr and the debug file.
+ *
+ * @param message - Message to log
+ * @param context - Optional structured context
+ */
 export function logWarn(message: string, context?: any): void {
   logManager.addLog('warn', message, context);
   const fullMessage = `[MCP] WARN: ${message}${context ? ' ' + JSON.stringify(context) : ''}`;

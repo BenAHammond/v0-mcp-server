@@ -18,7 +18,7 @@ export function generateMcpToolSchema(method: DiscoveredMethod): ToolSchema {
   
   return {
     name: method.toolName,
-    description: generateMethodDescription(method),
+    description: method.description || generateMethodDescription(method),
     inputSchema
   };
 }
@@ -63,20 +63,22 @@ function mapParameterToSchema(param: MethodParameter): ParameterSchema {
 
   // Add type-specific constraints and special handling
   switch (param.type) {
-    case 'string':
+    case 'string': {
       const stringSchema: ParameterSchema = {
         ...baseSchema,
         type: 'string',
         minLength: inferMinLength(param.name),
         maxLength: inferMaxLength(param.name)
       };
-      
-      // Add enum values for specific parameters
-      if (param.name === 'chatPrivacy' || param.name === 'privacy') {
-        stringSchema.enum = ['public', 'private', 'team', 'unlisted'];
+
+      // Add enum values for known enumerated parameters
+      const enumValues = paramEnums[param.name];
+      if (enumValues) {
+        stringSchema.enum = enumValues;
       }
-      
+
       return stringSchema;
+    }
       
     case 'number':
       return {
@@ -93,16 +95,6 @@ function mapParameterToSchema(param: MethodParameter): ParameterSchema {
       };
       
     case 'object':
-      // Special handling for modelConfiguration object
-      if (param.name === 'modelConfiguration') {
-        return {
-          ...baseSchema,
-          type: 'object',
-          description: 'Model configuration for generation. Controls thinking mode and image generation capabilities.',
-          // Note: MCP schema doesn't support nested object properties directly,
-          // but we can document it in the description
-        };
-      }
       return {
         ...baseSchema,
         type: 'object'
@@ -300,32 +292,41 @@ export function mapSdkParamsToMcp(sdkParams: any, method: DiscoveredMethod): any
  * Infers parameter type constraints based on parameter name
  */
 
+/**
+ * Known enumerated string parameters and their allowed values. Keyed by the
+ * parameter name so schema generation can attach `enum` constraints without
+ * runtime SDK introspection.
+ */
+const paramEnums: Record<string, string[]> = {
+  chatPrivacy: ['public', 'private', 'team', 'team-edit', 'unlisted'],
+  privacy: ['public', 'private', 'team', 'team-edit', 'unlisted'],
+  projectPrivacy: ['private', 'team'],
+  modelId: ['v0-auto', 'v0-mini', 'v0-pro', 'v0-max', 'v0-max-fast'],
+  type: ['files', 'repo', 'registry', 'zip', 'template'],
+  taskType: ['confirmed-steps', 'plan-exit-response', 'answered-questions', 'confirmed-permissions', 'vercel-connect-setup'],
+  status: ['approved', 'rejected', 'request-changes'],
+  responseMode: ['sync', 'async', 'experimental_stream']
+};
+
+const paramLengthConstraints: Record<string, { min?: number; max?: number }> = {
+  id: { min: 1 },
+  chatId: { min: 1 },
+  projectId: { min: 1 },
+  deploymentId: { min: 1 },
+  hookId: { min: 1 },
+  message: { min: 1, max: 50000 },
+  description: { min: 10, max: 10000 },
+  name: { min: 1, max: 100 },
+  title: { min: 1, max: 200 },
+  url: { max: 2000 }
+};
+
 function inferMinLength(paramName: string): number | undefined {
-  const lengthConstraints: Record<string, number> = {
-    id: 1,
-    chatId: 1,
-    projectId: 1,
-    deploymentId: 1,
-    hookId: 1,
-    message: 1,
-    description: 10,
-    name: 1,
-    title: 1
-  };
-  
-  return lengthConstraints[paramName];
+  return paramLengthConstraints[paramName]?.min;
 }
 
 function inferMaxLength(paramName: string): number | undefined {
-  const lengthConstraints: Record<string, number> = {
-    message: 50000,
-    description: 10000,
-    name: 100,
-    title: 200,
-    url: 2000
-  };
-  
-  return lengthConstraints[paramName];
+  return paramLengthConstraints[paramName]?.max;
 }
 
 function inferMinimumValue(paramName: string): number | undefined {
