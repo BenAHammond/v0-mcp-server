@@ -26,7 +26,7 @@ export const falseGreenInspectorRemoved: Flow = {
       const p = path.join(ctx.projectRoot, "tests", "integration", "mcp-handshake.test.ts");
       const source = fs.readFileSync(p, "utf-8");
       assertTrue(source.includes("serverInfo.name"), "the handshake test asserts the initialize serverInfo name");
-      assertTrue(source.includes("toHaveLength(30)"), "the handshake test asserts the 30-tool surface");
+      assertTrue(source.includes("toHaveLength(3)"), "the handshake test asserts the three-tool surface");
       assertTrue(source.includes("tools/call"), "the handshake test exercises a real tools/call");
     }),
   ],

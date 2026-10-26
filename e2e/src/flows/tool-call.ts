@@ -4,17 +4,14 @@ import { assertEqual, assertIncludes, assertTrue } from "../assert.js";
 
 export const networkFreeToolCall: Flow = {
   name: "network-free-tool-call",
-  description: "a tools/call to a network-free tool (logs_summary) succeeds and reports the environment.",
+  description: "a tools/call to a network-free tool (search) succeeds and reports the manifest.",
   steps: [
-    step("logs_summary reports success and the API key present", async (ctx) => {
-      const res = await ctx.client.callTool("logs_summary", {});
+    step("search reports success and the manifest", async (ctx) => {
+      const res = await ctx.client.callTool("search", {});
       assertEqual(res.isError, false, "the call is not an error");
-      const parsed = JSON.parse(res.text) as {
-        success: boolean;
-        result: { environment: { apiKeyPresent: boolean } };
-      };
+      const parsed = JSON.parse(res.text) as { success: boolean; resources: Record<string, unknown> };
       assertEqual(parsed.success, true, "the tool reports success");
-      assertTrue(parsed.result.environment.apiKeyPresent === true, "the environment reports the API key present");
+      assertTrue(parsed.resources !== undefined, "the manifest is returned");
     }),
   ],
 };
@@ -34,13 +31,13 @@ export const unknownToolRefusal: Flow = {
 
 export const missingParamRefusal: Flow = {
   name: "missing-param-refusal",
-  description: "a tools/call missing a required parameter reports invalid parameters.",
+  description: "a tools/call missing a required parameter reports the missing field.",
   steps: [
-    step("missing required param reports invalid parameters", async (ctx) => {
-      const res = await ctx.client.callTool("get_chat", {});
+    step("missing required param reports the missing field", async (ctx) => {
+      const res = await ctx.client.callTool("generate", {});
       const parsed = JSON.parse(res.text) as { success: boolean; error: string };
       assertEqual(parsed.success, false, "the call reports failure");
-      assertIncludes(parsed.error, "Invalid parameters", "the error names the invalid parameters");
+      assertIncludes(parsed.error, "prompt", "the error names the missing prompt parameter");
     }),
   ],
 };

@@ -21,26 +21,24 @@ function readDismissals(projectRoot: string): DismissalEntry[] {
 }
 
 /**
- * The `resolve-audit-dry-findings` criteria: the two structural-similarity
- * findings from the tool wrappers are dismissed with a written reason, the
- * pre-existing cli-error-handler finding stays dismissed, and the API-key
- * format literal in the handshake test is deduplicated to a single occurrence.
+ * The `stale-dismissals-cleaned` criteria: the two structural-similarity findings
+ * from the now-deleted tool wrappers are pruned from the ledger, the pre-existing
+ * cli-error-handler finding stays dismissed, and the API-key format literal in the
+ * handshake test is deduplicated to a single occurrence.
  */
 export const auditDismissalsDryFindings: Flow = {
   name: "audit-dismissals-dry-findings",
-  description: "the audit dry-findings are dismissed with written reasons and the handshake-test literal is deduplicated.",
+  description: "the stale tool-wrapper dismissals are pruned, the cli-error-handler finding stays, and the handshake literal is deduplicated.",
   steps: [
-    step("project-tools structural-similarity finding is dismissed", async (ctx) => {
+    step("orphaned project-tools finding is pruned", async (ctx) => {
       const entries = readDismissals(ctx.projectRoot);
       const hit = entries.find((e) => e.fingerprint === "4b775b5144efbc03414e4581f1db18796d78812b353ee628b0fd3063d767a4ea");
-      assertTrue(hit !== undefined, "project-tools finding (v0-project-tools.ts:443) is dismissed in .codeauditor.dismissals.json");
-      assertTrue(hit!.reason.trim().length > 0, "project-tools dismissal carries a written reason");
+      assertEqual(hit, undefined, "the project-tools finding (v0-project-tools.ts) is gone from .codeauditor.dismissals.json");
     }),
-    step("report-tools structural-similarity finding is dismissed", async (ctx) => {
+    step("orphaned report-tools finding is pruned", async (ctx) => {
       const entries = readDismissals(ctx.projectRoot);
       const hit = entries.find((e) => e.fingerprint === "08ef67094ca2b07673406494ba95ec733184edae4ff653a17601762ffccc459b");
-      assertTrue(hit !== undefined, "report-tools finding (v0-report-tools.ts:172) is dismissed in .codeauditor.dismissals.json");
-      assertTrue(hit!.reason.trim().length > 0, "report-tools dismissal carries a written reason");
+      assertEqual(hit, undefined, "the report-tools finding (v0-report-tools.ts) is gone from .codeauditor.dismissals.json");
     }),
     step("handshake-test API-key literal is deduplicated", async (ctx) => {
       const p = path.join(ctx.projectRoot, "tests", "integration", "mcp-handshake.test.ts");

@@ -13,12 +13,12 @@ export const isErrorOnFailure: Flow = {
   description: "a failed tool call surfaces isError:true; a successful call does not.",
   steps: [
     step("a failed tool call surfaces isError true", async (ctx) => {
-      const res = await ctx.client.callTool("get_chat", {});
-      assertTrue(res.isError === true, "a call missing its required chatId surfaces isError:true");
-      assertTrue(res.text.includes("Invalid parameters"), "the failure is also reported in the body");
+      const res = await ctx.client.callTool("generate", {});
+      assertTrue(res.isError === true, "a call missing its required prompt surfaces isError:true");
+      assertTrue(res.text.includes("prompt"), "the failure is also reported in the body");
     }),
     step("a successful tool call does not surface isError", async (ctx) => {
-      const res = await ctx.client.callTool("logs_summary", {});
+      const res = await ctx.client.callTool("search", {});
       assertTrue(res.isError === false, "a successful network-free call is not flagged isError");
     }),
   ],

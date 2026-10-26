@@ -12,7 +12,7 @@ import { assertEqual, assertTrue } from "../assert.js";
  * The declaration half is checked against the live schema (`tools/list`), which is
  * where the enum is surfaced. The forwarding half is a source-tree property — the
  * value must sit in the `shared` payload that both the create and sendMessage paths
- * receive — so it is read from `src/tools/v0-tools.ts`, not the built bundle.
+ * receive — so it is read from `src/tools/v0-manifest.ts`, not the built bundle.
  */
 export const generateExposesResponseMode: Flow = {
   name: "generate-exposes-response-mode",
@@ -34,21 +34,22 @@ export const generateExposesResponseMode: Flow = {
       );
     }),
     step("generate's sdkFunction forwards responseMode to both create and sendMessage", async (ctx) => {
-      const sourcePath = path.join(ctx.projectRoot, "src", "tools", "v0-tools.ts");
+      const sourcePath = path.join(ctx.projectRoot, "src", "tools", "v0-manifest.ts");
       const source = fs.readFileSync(sourcePath, "utf8");
 
-      // The value is extracted from params and placed in the `shared` payload.
+      // The value is extracted from params and placed in the shared payload.
       assertTrue(
-        source.includes("const responseMode = typeof params?.responseMode"),
-        "responseMode is extracted from the tool params",
+        source.includes("responseMode: params.responseMode"),
+        "responseMode is placed in the shared generate payload",
       );
-      const sharedBlock = source.match(/const shared = compact\(\{[\s\S]*?\}\);/);
-      assertTrue(sharedBlock !== null, "generate builds a shared payload");
-      assertTrue(sharedBlock![0].includes("responseMode"), "the shared payload carries responseMode");
 
-      // Both the continue (sendMessage) and create paths receive `shared`.
-      assertTrue(source.includes("continueChat(client, chatId, shared)"), "the sendMessage path receives shared");
-      assertTrue(source.includes("...shared"), "the create path receives shared");
+      // Both the continue (sendMessage) and create paths spread the shared payload.
+      assertTrue(source.includes("client.chats.sendMessage"), "the continue (sendMessage) path is wired");
+      assertTrue(source.includes("client.chats.create"), "the create path is wired");
+      assertTrue(
+        source.includes("...generateShared(params)"),
+        "both paths receive the shared payload carrying responseMode",
+      );
     }),
   ],
 };
