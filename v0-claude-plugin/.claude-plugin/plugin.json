@@ -1,0 +1,8 @@
+{
+  "name": "v0-claude-plugin",
+  "description": "Generate React UI with v0.dev by driving the v0-mcp-server MCP tools",
+  "version": "1.0.0",
+  "author": {
+    "name": "Ben Hammond"
+  }
+}
