@@ -47,6 +47,8 @@ const searchParamsSchema = z.object({
 
 /**
  * Builds the three registered v0 tools.
+ *
+ * @returns The `generate`, `request`, and `search` tool definitions.
  */
 export function createV0Tools(): McpTool[] {
   return [

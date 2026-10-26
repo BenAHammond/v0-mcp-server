@@ -367,12 +367,28 @@ export const V0_OPERATIONS: V0Operation[] = [
   }
 ];
 
-/** Looks up a requestable operation by resource + action. */
+/**
+ * Looks up a requestable operation by resource + action.
+ *
+ * @param resource - The resource namespace (e.g. `chats`).
+ * @param action - The action within the resource (e.g. `list`).
+ * @returns The matching operation, or `undefined` when none matches.
+ */
 export function findOperation(resource: string, action: string): V0Operation | undefined {
   return V0_OPERATIONS.find((op) => op.resource === resource && op.action === action);
 }
 
-/** Invokes an operation against the SDK client, using its closure or sdkPath. */
+/**
+ * Invokes an operation against the SDK client.
+ *
+ * Uses the operation's custom `invoke` closure when present; otherwise walks the
+ * `sdkPath` dot-path to the SDK method and calls it with the given params.
+ *
+ * @param op - The operation to invoke.
+ * @param client - The v0 SDK client instance.
+ * @param params - Parsed, flat params for the operation.
+ * @returns The SDK method's response (or the closure's return value).
+ */
 export function invokeOperation(op: V0Operation, client: any, params: any): Promise<unknown> | unknown {
   if (op.invoke) return op.invoke(client, params);
   const dot = op.sdkPath.indexOf('.');
@@ -389,7 +405,12 @@ export interface ManifestEntry {
   params: Record<string, unknown>;
 }
 
-/** Builds the on-demand manifest the `search` tool serves to the LLM. */
+/**
+ * Builds the on-demand manifest the `search` tool serves to the LLM.
+ *
+ * @param filter - Optional resource name to restrict the manifest to.
+ * @returns A `{resources, total}` shape grouping operations by resource.
+ */
 export function buildSearchManifest(filter?: string): {
   resources: Record<string, ManifestEntry[]>;
   total: number;
@@ -421,23 +442,54 @@ export const generateParamsSchema = z.object({
   responseMode: z.enum(['sync', 'async', 'experimental_stream']).optional()
 });
 
-/** Invokes `generate`: continues the chat when chatId is present, else creates one. */
+/**
+ * Invokes `generate`: creates a chat from the prompt, or continues the given
+ * chat when `chatId` is present.
+ *
+ * @param client - The v0 SDK client instance.
+ * @param params - Parsed `generate` params (`prompt` plus optional controls).
+ * @returns The SDK chat response (create or sendMessage).
+ */
 export async function invokeGenerate(client: any, params: any): Promise<unknown> {
-  const modelConfiguration = buildModelConfiguration(params);
-  const shared = compact({
+  return params.chatId ? generateContinue(client, params) : generateCreate(client, params);
+}
+
+/**
+ * Creates a new chat from a `generate` call.
+ *
+ * @param client - The v0 SDK client instance.
+ * @param params - Parsed `generate` params.
+ * @returns The new chat response.
+ */
+function generateCreate(client: any, params: any): Promise<unknown> {
+  return client.chats.create(
+    compact({ ...generateShared(params), projectId: params.projectId, chatPrivacy: params.chatPrivacy })
+  );
+}
+
+/**
+ * Sends a follow-up message to an existing chat.
+ *
+ * @param client - The v0 SDK client instance.
+ * @param params - Parsed `generate` params (must include `chatId`).
+ * @returns The updated chat response.
+ */
+function generateContinue(client: any, params: any): Promise<unknown> {
+  return client.chats.sendMessage({ chatId: params.chatId, ...generateShared(params) });
+}
+
+/**
+ * Builds the message/model payload shared by create and continue.
+ *
+ * @param params - Parsed `generate` params.
+ * @returns The `{message, system, attachments, modelConfiguration, responseMode}` payload with `undefined` values stripped.
+ */
+function generateShared(params: any): Record<string, unknown> {
+  return compact({
     message: params.prompt,
     system: params.system,
     attachments: params.attachments,
-    modelConfiguration,
+    modelConfiguration: buildModelConfiguration(params),
     responseMode: params.responseMode
   });
-
-  if (params.chatId) {
-    return client.chats.sendMessage({ chatId: params.chatId, ...shared });
-  }
-  return client.chats.create(compact({
-    ...shared,
-    projectId: params.projectId,
-    chatPrivacy: params.chatPrivacy
-  }));
 }
