@@ -35,7 +35,7 @@ async function main(): Promise<void> {
     console.log(`  ${flow.description}`);
     try {
       await client.initialize();
-      results.push(await runFlow(flow, { client, log }));
+      results.push(await runFlow(flow, { client, projectRoot: config.projectRoot, log }));
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e);
       results.push({ flow: flow.name, ok: false, steps: [{ step: "initialize", ok: false, error: message }] });

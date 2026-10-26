@@ -12,6 +12,8 @@ import type { McpClient } from "./client.js";
 export interface FlowContext {
   /** A freshly spawned, already-initialized server process for this flow. */
   client: McpClient;
+  /** The project root (`v0-mcp-server/`) a flow's checks read from. */
+  projectRoot: string;
   log: (message: string) => void;
 }
 
