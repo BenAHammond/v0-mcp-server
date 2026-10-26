@@ -15,8 +15,6 @@ logDebug('Process env V0_API_KEY exists:', !!process.env.V0_API_KEY);
 export { startServer } from './start.js';
 export { SimplifiedMcpServer } from './server.js';
 export * from './types.js';
-export * from './utils/tool-schema.js';
-export * from './utils/param-validator.js';
 export * from './utils/response-formatter.js';
 export { ApiKeyManager } from './auth.js';
 
@@ -79,9 +77,8 @@ if (isDirectEntry) {
         logInfo('✅ Simplified server initialized successfully');
         logInfo('✅ Auto-discovery completed');
 
-        const discoveredTools = server.getDiscoveredTools();
-        const toolsList = discoveredTools.length > 0 ? discoveredTools.map(t => t.toolName).join(', ') : 'none discovered, using fallback';
-        logInfo(`✅ Registered ${discoveredTools.length} tools: ${toolsList}`);
+        const toolNames = server.getToolNames();
+        logInfo(`✅ Registered ${toolNames.length} tools: ${toolNames.join(', ')}`);
         logInfo('✅ Ready for MCP protocol messages on stdio');
       })
       .catch(error => {

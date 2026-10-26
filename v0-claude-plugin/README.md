@@ -7,8 +7,9 @@ v0.dev's UI-generation API.
 It bundles two things:
 
 - **A skill** (`/v0-claude-plugin:generate-ui`) that walks through the
-  generate → save files → deploy workflow, so Claude knows when to call which
-  tool and in what order.
+  generate → save files → deploy workflow over the three tools — `generate`,
+  `request`, and `search` — so Claude knows when to call which one and in what
+  order.
 - **An MCP server** (`.mcp.json`) that launches `v0-mcp-server` over stdio via
   `npx`, so the tools are wired up with nothing for you to configure.
 

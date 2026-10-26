@@ -69,7 +69,8 @@
     "chalk": "^6.0.1",
     "commander": "^15.0.0",
     "dotenv": "^18.0.9",
-    "v0-sdk": "^0.16.7"
+    "v0-sdk": "^0.16.7",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@playwright/test": "^1.64.1",

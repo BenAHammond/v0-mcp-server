@@ -112,35 +112,26 @@ describe('MCP handshake over stdio (dist/index.js)', () => {
     expect(res.result.capabilities.tools).toEqual({});
   });
 
-  test('tools/list returns the full registered tool set', async () => {
+  test('tools/list returns the three-tool surface', async () => {
     client.notify('notifications/initialized');
 
     const res = await client.request('tools/list');
     const names = res.result.tools.map((t: any) => t.name);
 
     expect(res.error).toBeUndefined();
-    expect(names).toHaveLength(30);
-    for (const expected of [
-      'generate', 'list_chats', 'get_chat', 'delete_chat', 'rate_limits', 'deploy',
-      'deploy_logs', 'deploy_errors', 'list_versions', 'get_version',
-      'init_code', 'resolve_task',
-      'list_projects', 'create_project', 'list_env_vars',
-      'ai_usage', 'usage_events', 'user_activity',
-      'logs_summary'
-    ]) {
-      expect(names).toContain(expected);
-    }
+    expect(names).toHaveLength(3);
+    expect(names).toEqual(['generate', 'request', 'search']);
   });
 
-  test('tools/call executes a network-free tool successfully', async () => {
-    const res = await client.request('tools/call', { name: 'logs_summary', arguments: {} });
+  test('tools/call search executes without a network call', async () => {
+    const res = await client.request('tools/call', { name: 'search', arguments: {} });
     const text = res.result.content[0].text;
     const parsed = JSON.parse(text);
 
     expect(res.error).toBeUndefined();
     expect(parsed.success).toBe(true);
-    expect(parsed.result.environment).toBeDefined();
-    expect(parsed.result.environment.apiKeyPresent).toBe(true);
+    expect(parsed.resources).toBeDefined();
+    expect(parsed.resources.chats).toBeDefined();
   });
 
   test('tools/call to an unknown tool reports the failure in the body', async () => {
@@ -151,12 +142,12 @@ describe('MCP handshake over stdio (dist/index.js)', () => {
     expect(parsed.error).toContain('not found');
   });
 
-  test('tools/call with a missing required param reports invalid parameters', async () => {
-    const res = await client.request('tools/call', { name: 'get_chat', arguments: {} });
+  test('tools/call with a missing required param reports a validation error', async () => {
+    const res = await client.request('tools/call', { name: 'generate', arguments: {} });
     const parsed = JSON.parse(res.result.content[0].text);
 
     expect(parsed.success).toBe(false);
-    expect(parsed.error).toContain('Invalid parameters');
+    expect(parsed.error).toContain('prompt');
   });
 });
 

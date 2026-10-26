@@ -1,22 +1,21 @@
 /**
  * Response Formatting Utilities
  *
- * Formats SDK responses for consistent MCP output. Tools are expected to shape
- * their own results (a concise, LLM-friendly object) inside their `sdkFunction`;
- * this module only handles the raw SDK shapes that need post-processing.
+ * Formats SDK responses for consistent MCP output. Operations are expected to
+ * return a raw SDK shape; this module only handles the raw shapes that need
+ * post-processing (chat details) and passes everything else through untouched.
  */
 
-import { ToolExecutionResult } from '../types.js';
+import { z } from 'zod';
 
 /**
  * Formats an SDK response for consistent MCP output.
  *
  * Raw `ChatDetail` responses (returned by create/sendMessage/init/resolveTask
  * and marked with `object: 'chat'`) have their files extracted for display.
- * Everything else is treated as an already-shaped tool result and passed
- * through untouched so no data is dropped.
+ * Everything else is passed through untouched so no data is dropped.
  *
- * @param response - Raw SDK response or shaped tool result
+ * @param response - Raw SDK response
  * @param toolName - Name of the tool that generated the response
  * @returns Formatted response for MCP
  */
@@ -34,7 +33,7 @@ export function formatSdkResponse(response: any, toolName: string): any {
       return formatChatDetailResponse(response, toolName);
     }
 
-    // Tool already returned a shaped result — pass it through without dropping data.
+    // Already a plain result — pass it through without dropping data.
     return { success: true, toolName, ...response };
   } catch (error) {
     return {
@@ -87,53 +86,24 @@ function formatChatDetailResponse(response: any, toolName: string): any {
  * @returns Standardized error response object
  */
 export function formatErrorResponse(error: any, toolName: string, context?: string): any {
-  const errorMessage = error instanceof Error ? error.message : String(error);
-
   return {
     success: false,
     toolName,
-    error: errorMessage,
+    error: describeError(error),
     context: context || 'tool_execution',
     timestamp: new Date().toISOString()
   };
 }
 
 /**
- * Formats an execution result into plain text for the MCP response.
- *
- * @param result - The tool execution result to format
- * @returns Human-readable text representation
+ * Renders any thrown value as a concise, human-readable message. Zod validation
+ * errors are flattened to `path: message` entries instead of the raw issue JSON.
  */
-export function formatExecutionResult(result: ToolExecutionResult): string {
-  if (result.success && result.result) {
-    if (result.result.formattedContent) {
-      return result.result.formattedContent;
-    }
-
-    if (result.result.message) {
-      return result.result.message;
-    }
+function describeError(error: any): string {
+  if (error instanceof z.ZodError) {
+    return error.issues
+      .map((issue) => `${issue.path.join('.') || '(input)'}: ${issue.message}`)
+      .join('; ');
   }
-
-  if (result.success && result.formattedResult) {
-    if (typeof result.formattedResult === 'string') {
-      return result.formattedResult;
-    }
-
-    if (result.formattedResult.formattedContent) {
-      return result.formattedResult.formattedContent;
-    }
-
-    if (result.formattedResult.message) {
-      return result.formattedResult.message;
-    }
-
-    return JSON.stringify(result.formattedResult, null, 2);
-  }
-
-  if (!result.success && result.error) {
-    return `Error: ${result.error}`;
-  }
-
-  return 'Operation completed successfully';
+  return error instanceof Error ? error.message : String(error);
 }

@@ -222,7 +222,7 @@ class V0McpCli {
 
       console.error(chalk.green('✅ Simplified v0 MCP Server started successfully!'));
       console.error(chalk.blue('📡 Listening for MCP requests via stdio'));
-      console.error(chalk.blue(`🔍 Auto-discovered ${this.server.getDiscoveredTools().length} tools`));
+      console.error(chalk.blue(`🔍 Registered ${this.server.getToolNames().length} tools`));
 
       if (options.verbose) {
         console.error(chalk.gray('💡 Server is running. Use Ctrl+C to stop.'));
@@ -310,7 +310,7 @@ class V0McpCli {
   private showStartupBanner(): void {
     console.error(chalk.cyan('┌─────────────────────────────────────────┐'));
     console.error(chalk.cyan('│') + chalk.bold('    Simplified v0 MCP Server') + '          ' + chalk.cyan('│'));
-    console.error(chalk.cyan('│') + '   Auto-Discovery + Direct Dispatch     ' + chalk.cyan('│'));
+    console.error(chalk.cyan('│') + '       generate · request · search       ' + chalk.cyan('│'));
     console.error(chalk.cyan('└─────────────────────────────────────────┘'));
     console.error();
   }
@@ -390,7 +390,7 @@ class V0McpCli {
 
     return {
       running: this.server.isRunning(),
-      toolCount: this.server.getDiscoveredTools().length
+      toolCount: this.server.getToolNames().length
     };
   }
 }

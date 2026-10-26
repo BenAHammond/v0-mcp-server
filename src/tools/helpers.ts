@@ -1,9 +1,5 @@
 /**
- * Shared helpers for v0 tool builders.
- *
- * Tool `sdkFunction`s receive flat, LLM-friendly parameters and are responsible
- * for (a) assembling the nested payload the SDK expects and (b) shaping the
- * response into a concise object. These helpers remove the boilerplate.
+ * Shared helpers for v0 tool invocation.
  */
 
 /**
@@ -36,17 +32,4 @@ export function buildModelConfiguration(params: {
     return undefined;
   }
   return compact({ modelId, imageGenerations, thinking });
-}
-
-/**
- * Requires a trimmed, non-empty string, throwing a helpful error otherwise.
- *
- * @param value - The value to coerce to a string
- * @param fieldName - The parameter name, used in the thrown error
- * @returns The trimmed, non-empty string
- */
-export function requireString(value: any, fieldName: string): string {
-  const trimmed = typeof value === 'string' ? value.trim() : '';
-  if (!trimmed) throw new Error(`${fieldName} is required`);
-  return trimmed;
 }
